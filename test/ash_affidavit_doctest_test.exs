@@ -5,6 +5,7 @@
 defmodule AshAffidavit.DoctestTest do
   use ExUnit.Case, async: true
 
+  doctest AshAffidavit
   doctest AshAffidavit.ABI
   doctest AshAffidavit.Refusal
 end

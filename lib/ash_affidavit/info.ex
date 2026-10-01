@@ -1,52 +1,42 @@
-# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
-#
-# SPDX-License-Identifier: MIT
-# UNSUPPORTED(generator-capability): hand-written residue; no pack template emits a Spark info
-# module. Recorded in HANDWRITTEN.md.
-
 defmodule AshAffidavit.Resource.Info do
   @moduledoc """
-  Introspection of the `affidavit` section declared with `AshAffidavit.Resource`.
+  Public introspection API for `ash_affidavit`.
   """
 
-  alias Spark.Dsl.Extension
+  @doc "Returns the raw `:affidavit` DSL entities declared on `resource`."
+  def affidavit(resource) do
+    Spark.Dsl.Extension.get_entities(resource, [:affidavit])
+  end
 
-  @doc "The normalized declaration (`%{runtime: _, operations: [_]}`), or `nil` when the resource does not carry the extension."
-  @spec compiled(Ash.Resource.t() | module()) :: map() | nil
+  @doc "Returns the transformer-normalized compiled state for `resource`, or `nil` if the extension is not present."
   def compiled(resource) do
-    if Code.ensure_loaded?(resource) and function_exported?(resource, :spark_dsl_config, 0),
-      do: Extension.get_persisted(resource, :ash_affidavit_compiled, nil),
-      else: nil
+    case compiled_result(resource) do
+      {:ok, compiled} -> compiled
+      {:error, _} -> nil
+    end
   end
 
-  @doc "Like `compiled/1`; raises `ArgumentError` when the resource carries no compiled declaration."
-  @spec compiled!(Ash.Resource.t() | module()) :: map()
+  @doc """
+  Returns `{:ok, compiled}` or `{:error, :not_compiled}` for `resource`.
+
+  """
+  def compiled_result(resource) do
+    case Spark.Dsl.Extension.get_persisted(resource, :ash_affidavit_compiled, nil) do
+      nil -> {:error, :not_compiled}
+      compiled -> {:ok, compiled}
+    end
+  end
+
+  @doc "Bang variant of `compiled_result/1` -- raises `ArgumentError` instead of returning `{:error, _}`."
   def compiled!(resource) do
-    case compiled(resource) do
-      nil -> raise ArgumentError, "#{inspect(resource)} does not use AshAffidavit.Resource"
-      compiled -> compiled
+    case compiled_result(resource) do
+      {:ok, compiled} -> compiled
+      {:error, reason} -> raise ArgumentError, "AshAffidavit.Resource.Info.compiled!/1: #{inspect(reason)}"
     end
   end
 
-  @doc "Does `resource` carry a compiled `affidavit` declaration?"
-  @spec compiled?(Ash.Resource.t() | module()) :: boolean()
-  def compiled?(resource), do: compiled(resource) != nil
-
-  @doc "The declared `runtime` entity, or `nil`."
-  @spec runtime(Ash.Resource.t() | module()) :: AshAffidavit.Dsl.Runtime.t() | nil
-  def runtime(resource) do
-    case compiled(resource) do
-      %{runtime: runtime} -> runtime
-      _ -> nil
-    end
-  end
-
-  @doc "The declared `operation` entities (names are strings), in declaration order."
-  @spec operations(Ash.Resource.t() | module()) :: [AshAffidavit.Dsl.Operation.t()]
-  def operations(resource) do
-    case compiled(resource) do
-      %{operations: operations} -> operations
-      _ -> []
-    end
+  @doc "Predicate: does `resource` carry compiled `ash_affidavit` state?"
+  def compiled?(resource) do
+    match?({:ok, _}, compiled_result(resource))
   end
 end

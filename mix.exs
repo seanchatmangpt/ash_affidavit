@@ -142,7 +142,7 @@ defmodule AshAffidavit.MixProject do
       maintainers: [@maintainer],
       licenses: ["MIT"],
       files:
-        ~w(lib priv/affidavit ontology scripts consumer-pack.pin .formatter.exs mix.exs AGENTS.md usage-rules.md usage-rules README* LICENSE* LICENSES REUSE.toml HANDWRITTEN.md CHANGELOG* documentation),
+        ~w(lib priv/affidavit ontology scripts consumer-pack.pin ggen.toml .formatter.exs mix.exs AGENTS.md usage-rules.md usage-rules README* LICENSE* LICENSES REUSE.toml HANDWRITTEN.md CHANGELOG* documentation),
       links: %{
         "GitHub" => @github_url,
         "Documentation" => @docs_url,
@@ -163,6 +163,8 @@ defmodule AshAffidavit.MixProject do
       {:telemetry, "~> 1.0"},
       # Optional: only the `mix ash_affidavit.install` task needs it, and only in the consuming project.
       {:igniter, ">= 0.6.29 and < 1.0.0-0", optional: true},
+      # Optional: AshAffidavit.Reactor.Step exists only when Reactor is loadable (Ash itself depends on it).
+      {:reactor, "~> 1.0", optional: true},
       {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
       {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},

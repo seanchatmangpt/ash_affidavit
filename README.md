@@ -77,13 +77,20 @@ pin, compile, import surface (exactly `environ_get`, `environ_sizes_get`, `fd_wr
 from `wasi_snapshot_preview1`), required exports (`af_alloc`, `af_call`, `af_free`,
 `af_abi_version`, `memory`). Requests are capped at 16 MiB.
 
-## Provenance of the host code
+## Provenance of the code
 
-`lib/ash_affidavit/{abi,wasm_config,engine_load,host,pool}.ex` and the two Mix tasks are generated
-from `ontology/affidavit-binding.ttl` and `ontology/affidavit-contract.ttl` by the
-qri-consumer-binding-pack (`scripts/consume.sh`, pins in `consumer-pack.pin`). Change the binding or
-contract, not those files. The hand-written residue and why
-it is hand-written is listed in `HANDWRITTEN.md`.
+Two projections, each from RDF, each pinned in `consumer-pack.pin`:
+
+- `lib/ash_affidavit/{abi,wasm_config,engine_load,host,pool}.ex` and the two `vendor`/`verify` Mix tasks come
+  from `ontology/affidavit-binding.ttl` and `ontology/affidavit-contract.ttl` by the
+  qri-consumer-binding-pack (`scripts/consume.sh`). The script refuses a pack export whose fingerprint differs
+  from `pack_fingerprint` (`REFUSED:PACK_FINGERPRINT_STALE`).
+- `lib/ash_affidavit/{resource,persist,verify,info}.ex` and
+  `mix ash_affidavit.install` come from `ontology/affidavit-extension.ttl` by the
+  ash-extension-pack (`scripts/render_extension.sh`, `ggen.toml`).
+
+Change the ontology, not the generated files. The hand-written residue, and why each file is hand-written,
+is listed in `HANDWRITTEN.md`.
 
 ## Ash extension
 
@@ -114,7 +121,21 @@ The engine response is stored at `changeset.context[:affidavit]`. Any refused, t
 unsupported outcome fails the action with an `AshAffidavit.Error.Refused` that keeps the typed
 `AshAffidavit.Refusal`. Also shipped: `AshAffidavit.Validation.Verified`,
 `AshAffidavit.Calculation.Verdict`, `AshAffidavit.Type.Receipt`, `AshAffidavit.Type.ChainHash`,
-`AshAffidavit.Notifier`. See `documentation/` and `usage-rules.md`.
+`AshAffidavit.Notifier`. Read the declaration with `AshAffidavit.Resource.Info.compiled/1` or
+`AshAffidavit.Resource.Declared.runtime/1` and `operations/1`. See `documentation/` and `usage-rules.md`.
+
+Authority stays NONE: `AshAffidavit.call/2` refuses (`:authority_escalation`) any `{:ok, _}` whose
+`authority` (top level or inside `evidence`) is above NONE, so no change, validation, calculation or
+notifier can carry such a response.
+
+## Reactor and Igniter
+
+`AshAffidavit.Reactor.Step` runs one op as a Reactor step
+(`step :commit, {AshAffidavit.Reactor.Step, op: :commit}`); it exists only when Reactor is loadable, and
+`reactor` and `igniter` are optional dependencies. `mix ash_affidavit.install [--target MyApp.Resource]`
+adds the `wasmex` dependency, the `import_deps` entry and the formatter plugin, and with `--target`
+the extension and a starter `affidavit do end` block; a second run changes nothing. Without Igniter the
+task prints the manual steps. There is no upgrade task and no Reactor DSL entity yet (`HANDWRITTEN.md`).
 
 ## Configuration
 

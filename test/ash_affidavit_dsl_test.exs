@@ -6,7 +6,7 @@ defmodule AshAffidavit.DslTest do
   # Each case compiles a real embedded resource from source and runs the real verifier over it.
   use ExUnit.Case, async: true
 
-  alias AshAffidavit.Resource.Info
+  alias AshAffidavit.Resource.Declared
   alias AshAffidavit.Resource.Verify
   alias ExUnit.CaptureIO
 
@@ -62,7 +62,7 @@ defmodule AshAffidavit.DslTest do
 
     module = AshAffidavit.Test.Build
 
-    assert Enum.map(Info.operations(module), &{&1.name, &1.ceiling}) ==
+    assert Enum.map(Declared.operations(module), &{&1.name, &1.ceiling}) ==
              [{"commit", :observe}, {"verify", :observe}]
   end
 

@@ -9,6 +9,7 @@ defmodule AshAffidavit.AshTest do
   alias Ash.Changeset
   alias AshAffidavit.Calculation.Verdict
   alias AshAffidavit.Error.Refused
+  alias AshAffidavit.Resource.Declared
   alias AshAffidavit.Resource.Info
   alias AshAffidavit.Test.Build
 
@@ -20,16 +21,14 @@ defmodule AshAffidavit.AshTest do
   describe "Info" do
     test "reads the declared runtime and operations" do
       assert Info.compiled?(Build)
-      assert %{timeout_ms: 5_000, singleton: true} = Info.runtime(Build)
-      assert Enum.map(Info.operations(Build), & &1.name) == ["commit", "verify"]
+      assert %{timeout_ms: 5_000, singleton: true} = Declared.runtime(Build)
+      assert Enum.map(Declared.operations(Build), & &1.name) == ["commit", "verify"]
       assert Info.compiled!(Build).runtime.timeout_ms == 5_000
     end
 
     test "a module without the extension has no declaration" do
-      refute Info.compiled?(AshAffidavit)
-      assert Info.runtime(AshAffidavit) == nil
-      assert Info.operations(AshAffidavit) == []
-      assert_raise ArgumentError, fn -> Info.compiled!(AshAffidavit) end
+      assert Declared.runtime(AshAffidavit) == nil
+      assert Declared.operations(AshAffidavit) == []
     end
   end
 

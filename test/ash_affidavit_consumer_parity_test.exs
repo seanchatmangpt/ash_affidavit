@@ -44,8 +44,54 @@ defmodule AshAffidavit.ConsumerParityTest do
     end
   end
 
-  # Live regeneration needs python3.11 + ggen and ASH_AFFIDAVIT_PACK_ROOT; test_helper.exs excludes
-  # the :pack_root tag (with a stderr reason) when that variable is unset.
+  test "the pin carries a well-formed pack fingerprint and the extension pack pin" do
+    pin = pin()
+    assert pin["pack_fingerprint"] =~ ~r/^sha256:[0-9a-f]{64}$/
+    assert pin["ext_pack_content_digest"] =~ ~r/^[0-9a-f]{64}$/
+    assert pin["ext_pack_base_commit"] =~ ~r/^[0-9a-f]{40}$/
+  end
+
+  # The pack fingerprint court. It runs against the CURRENT pack export in ASH_AFFIDAVIT_PACK_ROOT and fails
+  # closed: a stale pin refuses, it never warns. test_helper.exs excludes :pack_root (with a stderr reason)
+  # when that variable is unset.
+  @tag :pack_root
+  test "pack_fingerprint equals the fingerprint of the current pack export" do
+    pack = Path.join(System.fetch_env!("ASH_AFFIDAVIT_PACK_ROOT"), "packs/qri-consumer-binding-pack")
+    {out, status} = System.cmd("python3.11", [Path.join(@root, "scripts/pack_fingerprint.py"), pack])
+    assert status == 0, out
+    assert String.trim(out) == pin()["pack_fingerprint"], "consumer-pack.pin pack_fingerprint is stale"
+  end
+
+  @tag :pack_root
+  test "consume.sh refuses a stale pack fingerprint and writes nothing" do
+    pack_root = System.fetch_env!("ASH_AFFIDAVIT_PACK_ROOT")
+    dir = Path.join(System.tmp_dir!(), "ash_affidavit_stale_#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf(dir) end)
+    File.mkdir_p!(dir)
+
+    stale =
+      String.replace(
+        File.read!(Path.join(@root, "consumer-pack.pin")),
+        ~r/(pack_fingerprint = "sha256:)[0-9a-f]/,
+        "\\1x"
+      )
+
+    stale_pin = Path.join(dir, "stale.pin")
+    File.write!(stale_pin, stale)
+    out = Path.join(dir, "out")
+
+    {log, status} =
+      System.cmd("bash", [Path.join(@root, "scripts/consume.sh"), "--out", out, "--pack-root", pack_root],
+        stderr_to_stdout: true,
+        env: [{"ASH_AFFIDAVIT_PIN", stale_pin}]
+      )
+
+    assert status == 66, log
+    assert log =~ "REFUSED:PACK_FINGERPRINT_STALE"
+    refute File.exists?(out)
+  end
+
+  # Live regeneration needs python3.11 + ggen and ASH_AFFIDAVIT_PACK_ROOT.
   @tag :pack_root
   @tag timeout: 300_000
   test "consume.sh regenerates the committed files byte-for-byte" do

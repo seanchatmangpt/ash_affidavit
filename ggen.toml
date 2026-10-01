@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Manufacturing contract for the Spark/Igniter extension surface. Read only by scripts/render_extension.sh,
+# which copies this file, ontology/affidavit-extension.ttl and the pinned ash-extension-pack export into a
+# scratch directory and runs `ggen sync run` there. Nothing is ever written into the pack or into this tree by
+# ggen itself. Projections: lib/ash_affidavit/{resource,persist,verify,info}.ex,
+# lib/mix/tasks/ash_affidavit.install.ex, test/ash_affidavit_composition_test.exs.
+
+[project]
+name = "ash_affidavit"
+
+[ontology]
+source = "ontology/affidavit-extension.ttl"
+
+[packs]
+ash-extension-pack = { path = "vendor/ash-extension-pack" }
+
+[templates]
+dir = "templates"

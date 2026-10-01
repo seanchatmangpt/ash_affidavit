@@ -169,8 +169,10 @@ defmodule AshAffidavit.WasmConfig do
 
   defp limit(opts, key, default) do
     [Keyword.get(opts, key), Application.get_env(:ash_affidavit, key)]
-    |> Enum.find(default, &(is_integer(&1) and &1 > 0))
+    |> Enum.find(default, &(is_integer(&1) and &1 >= min_limit(key)))
   end
+
+  defp min_limit(_key), do: 1
 
   defp read_manifest(path) do
     case File.read(path) do

@@ -1,13 +1,5 @@
-# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
-#
-# SPDX-License-Identifier: MIT
-# UNSUPPORTED(generator-capability): hand-written residue; no pack template emits a Spark DSL
-# extension. Recorded in HANDWRITTEN.md.
-
 defmodule AshAffidavit.Dsl.Runtime do
-  @moduledoc """
-  Struct of the `runtime` entity of the `affidavit` section; see `AshAffidavit.Resource`.
-  """
+  @moduledoc false
 
   defstruct [
     :wasm_path,
@@ -18,14 +10,10 @@ defmodule AshAffidavit.Dsl.Runtime do
     trusted_keys: [],
     singleton: true
   ]
-
-  @type t :: %__MODULE__{}
 end
 
 defmodule AshAffidavit.Dsl.Operation do
-  @moduledoc """
-  Struct of an `operation` entity of the `affidavit` section; see `AshAffidavit.Resource`.
-  """
+  @moduledoc false
 
   @enforce_keys [:name]
 
@@ -36,43 +24,18 @@ defmodule AshAffidavit.Dsl.Operation do
     :__spark_metadata__,
     ceiling: :observe
   ]
-
-  @type t :: %__MODULE__{}
 end
 
 defmodule AshAffidavit.Resource do
   @moduledoc """
-  `Spark.Dsl.Extension` that declares, on an Ash resource, which affidavit engine operations the
-  resource uses and how it reaches the engine.
+  Spark.Dsl.Extension for `ash_affidavit`.
 
-      defmodule MyApp.Build do
-        use Ash.Resource,
-          domain: MyApp.Domain,
-          extensions: [AshAffidavit.Resource]
-
-        affidavit do
-          runtime do
-            timeout_ms 2_000
-          end
-
-          operation :commit
-          operation :verify
-        end
-      end
-
-  The section is declarative. It is checked at compile time (`AshAffidavit.Resource.Verify`):
-  every `operation` must name an op of the engine's capability registry (`AshAffidavit.ops/0`),
-  every `ceiling` must be one of `:observe`, `:select`, `:construct`, and `timeout_ms` must be
-  positive. Declaring a ceiling grants no authority: this package grants none. Read the compiled
-  declaration back with `AshAffidavit.Resource.Info`.
-
-  Engine calls go through `AshAffidavit.call/2`, for example from
-  `AshAffidavit.Change.Receipt`.
+  Manufactured by ash-extension-core-pack from an admitted `aex:AshExtensionSpec` --
+  do not hand-edit; regenerate from the spec instead.
   """
 
   @runtime %Spark.Dsl.Entity{
     name: :runtime,
-    describe: "How resource actions reach the affidavit engine.",
     target: AshAffidavit.Dsl.Runtime,
     schema: [
       wasm_path: [
@@ -104,29 +67,29 @@ defmodule AshAffidavit.Resource do
         type: :boolean,
         required: false,
         default: true,
-        doc: "True routes calls through the shared default pool when no server is given. False requires `server`."
+        doc: "True routes calls through the shared default pool when no server is given. False requires server."
       ]
     ]
   }
 
   @operation %Spark.Dsl.Entity{
     name: :operation,
-    describe: "An engine operation this resource uses.",
     target: AshAffidavit.Dsl.Operation,
     args: [:name],
     identifier: :name,
     schema: [
       name: [
-        type: {:or, [:atom, :string]},
+        type: :any,
         required: true,
-        doc: "Engine op name, for example :commit or :verify. Must be a member of AshAffidavit.ops/0."
+        doc:
+          "Engine op name as an atom or string, for example :commit or :verify. Must be a member of AshAffidavit.ops/0; checked by the verifier."
       ],
       ceiling: [
         type: :atom,
         required: false,
         default: :observe,
         doc:
-          "Authority ceiling declared for the op: :observe, :select or :construct. Declaring a ceiling never grants authority."
+          "Authority ceiling declared for the op: observe, select or construct. Declaring a ceiling never grants authority."
       ],
       doc: [type: :string, required: false, doc: "Free-text note on why the resource uses the op."]
     ]
@@ -135,7 +98,10 @@ defmodule AshAffidavit.Resource do
   @affidavit %Spark.Dsl.Section{
     name: :affidavit,
     describe: "Affidavit engine configuration: one runtime entity and any number of operations.",
-    entities: [@runtime, @operation],
+    entities: [
+      @runtime,
+      @operation
+    ],
     singleton_entity_keys: [:runtime]
   }
 

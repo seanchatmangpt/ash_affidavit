@@ -7,8 +7,9 @@
 defmodule AshAffidavit.Formatter do
   @moduledoc """
   `Spark.Formatter` helper for the `affidavit` section. It lists the extensions this package
-  exports. Without a plugin of its own, a consumer enables the formatting with `Spark.Formatter`
-  and `import_deps: [:ash_affidavit]` in `.formatter.exs`.
+  exports. The installer registers this module as a formatter plugin in the consumer's `.formatter.exs`
+  (`import_deps: [:ash_affidavit]` supplies the locals_without_parens export). This package's own
+  `.formatter.exs` uses `Spark.Formatter` directly.
   """
 
   @doc "The Spark extensions exported by AshAffidavit."

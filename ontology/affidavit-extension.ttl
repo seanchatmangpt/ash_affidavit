@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Ash extension spec for ash_affidavit in the vocabulary of ash-extension-pack (aex:). scripts/render_extension.sh
+# projects it into lib/ash_affidavit/{resource,persist,verify,info}.ex and lib/mix/tasks/ash_affidavit.install.ex.
+# Generated files are never hand-edited: change this file and re-render. The business logic the pack cannot emit
+# (normalization shape, legality checks) lives in two hand-written modules named below and ledgered in
+# HANDWRITTEN.md.
+
+@prefix aex: <http://seanchatmangpt.github.io/packs/ash-extension-core#> .
+
+aex:AshAffidavitSpec a aex:AshExtensionSpec ;
+    aex:packageName "ash_affidavit" ;
+    aex:moduleName "AshAffidavit.Resource" ;
+    aex:extensionTarget "resource" ;
+    aex:singleExtensionKind "ash_affidavit" ;
+    aex:taskModuleName "AshAffidavit" ;
+    aex:formatterModule "AshAffidavit.Formatter" ;
+    aex:installerRuntimeDep "wasmex|~> 0.15.1" ;
+    aex:normalizeModule "AshAffidavit.Resource.Normalize" ;
+    aex:normalizeFunction "normalize" ;
+    aex:validateDelegateModule "AshAffidavit.Resource.Validate" ;
+    aex:validateDelegateFunction "validate" ;
+    aex:workflowReactor false ;
+    aex:workflowReversible false .
+
+aex:AshAffidavitSection a aex:DslSection ;
+    aex:sectionOf aex:AshAffidavitSpec ;
+    aex:sectionName "affidavit" ;
+    aex:sectionOrder 1 ;
+    aex:sectionDescribe "Affidavit engine configuration: one runtime entity and any number of operations." ;
+    aex:singletonEntityKey "runtime" .
+
+# --- runtime entity -------------------------------------------------------------------------------------------
+
+aex:AshAffidavitRuntimeEntity a aex:DslEntity ;
+    aex:entityOf aex:AshAffidavitSection ;
+    aex:entityOrder 1 ; aex:entityName "runtime" ;
+    aex:entityStruct "AshAffidavit.Dsl.Runtime" .
+
+aex:AshAffidavitRuntimeWasmPath a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitRuntimeEntity ;
+    aex:fieldOrder 1 ; aex:fieldName "wasm_path" ; aex:fieldType "string" ;
+    aex:fieldRequired false ;
+    aex:fieldDoc "Path of the engine wasm this resource expects. Declarative only: the host resolves and digest-pins the engine itself (see AshAffidavit.WasmConfig)." .
+
+aex:AshAffidavitRuntimeTimeout a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitRuntimeEntity ;
+    aex:fieldOrder 2 ; aex:fieldName "timeout_ms" ; aex:fieldType "integer" ;
+    aex:fieldRequired false ; aex:fieldDefault "5000" ;
+    aex:fieldDoc "Per-call timeout in milliseconds. Must be positive." .
+
+aex:AshAffidavitRuntimeTrustedKeys a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitRuntimeEntity ;
+    aex:fieldOrder 3 ; aex:fieldName "trusted_keys" ; aex:fieldType "list_string" ;
+    aex:fieldRequired false ; aex:fieldDefault "[]" ;
+    aex:fieldDoc "Hex-encoded 32-byte public keys (64 characters each) the resource declares as trusted signers. Declarative only." .
+
+aex:AshAffidavitRuntimeServer a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitRuntimeEntity ;
+    aex:fieldOrder 4 ; aex:fieldName "server" ; aex:fieldType "any" ;
+    aex:fieldRequired false ;
+    aex:fieldDoc "Name or pid of an AshAffidavit.Host or AshAffidavit.Pool to route calls through. Nil routes through the default pool." .
+
+aex:AshAffidavitRuntimeSingleton a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitRuntimeEntity ;
+    aex:fieldOrder 5 ; aex:fieldName "singleton" ; aex:fieldType "boolean" ;
+    aex:fieldRequired false ; aex:fieldDefault "true" ;
+    aex:fieldDoc "True routes calls through the shared default pool when no server is given. False requires server." .
+
+# --- operation entity -----------------------------------------------------------------------------------------
+
+aex:AshAffidavitOperationEntity a aex:DslEntity ;
+    aex:entityOf aex:AshAffidavitSection ;
+    aex:entityOrder 2 ; aex:entityName "operation" ;
+    aex:entityStruct "AshAffidavit.Dsl.Operation" ;
+    aex:entityIdentifier "name" .
+
+aex:AshAffidavitOperationArgName a aex:EntityArg ;
+    aex:argOf aex:AshAffidavitOperationEntity ;
+    aex:argOrder 1 ; aex:argName "name" .
+
+aex:AshAffidavitOperationName a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitOperationEntity ;
+    aex:fieldOrder 1 ; aex:fieldName "name" ; aex:fieldType "any" ;
+    aex:fieldRequired true ;
+    aex:fieldDoc "Engine op name as an atom or string, for example :commit or :verify. Must be a member of AshAffidavit.ops/0; checked by the verifier." .
+
+aex:AshAffidavitOperationCeiling a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitOperationEntity ;
+    aex:fieldOrder 2 ; aex:fieldName "ceiling" ; aex:fieldType "atom" ;
+    aex:fieldRequired false ; aex:fieldDefault ":observe" ;
+    aex:fieldDoc "Authority ceiling declared for the op: observe, select or construct. Declaring a ceiling never grants authority." .
+
+aex:AshAffidavitOperationDoc a aex:EntitySchemaField ;
+    aex:fieldOf aex:AshAffidavitOperationEntity ;
+    aex:fieldOrder 3 ; aex:fieldName "doc" ; aex:fieldType "string" ;
+    aex:fieldRequired false ;
+    aex:fieldDoc "Free-text note on why the resource uses the op." .

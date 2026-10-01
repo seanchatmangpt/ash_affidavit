@@ -21,6 +21,8 @@ defmodule AshAffidavit.Refusal do
 
     * `:refused`     - the input, the engine identity or a resource bound was refused; retry
       only with a different input or different bytes.
+    * `:refused` also covers class `:refused_authority`: a response that states an authority above
+      NONE is never success (`:authority_escalation`).
     * `:trap`        - the engine or the host failed at run time (trap, exit, ABI failure,
       malformed response); the host recycles the instance.
     * `:unsupported` - the engine does not support what was asked (`unknown_op`) or returned
@@ -58,6 +60,8 @@ defmodule AshAffidavit.Refusal do
     wasm_import_surface_mismatch: :refused_identity,
     wasm_missing_export: :refused_identity,
     wasm_invalid: :refused_identity,
+    # a response that states an authority above NONE is never success (authority ceiling NONE)
+    authority_escalation: :refused_authority,
     wasm_not_vendored: :blocked_resource,
     wasm_unreadable: :blocked_resource,
     # resources
@@ -92,7 +96,7 @@ defmodule AshAffidavit.Refusal do
   @typedoc "Closed set of refusal codes."
   @type code :: atom()
   @typedoc "Closed set of refusal classes."
-  @type class :: :refused_input | :refused_identity | :blocked_resource | :trap | :unsupported
+  @type class :: :refused_input | :refused_identity | :refused_authority | :blocked_resource | :trap | :unsupported
   @typedoc "Caller-visible outcome of a class."
   @type outcome :: :refused | :trap | :unsupported
 
@@ -136,7 +140,9 @@ defmodule AshAffidavit.Refusal do
   def outcome(%__MODULE__{class: class}), do: outcome(class)
   def outcome(:trap), do: :trap
   def outcome(:unsupported), do: :unsupported
-  def outcome(class) when class in [:refused_input, :refused_identity, :blocked_resource], do: :refused
+
+  def outcome(class) when class in [:refused_input, :refused_identity, :refused_authority, :blocked_resource],
+    do: :refused
 
   @doc """
   Builds a refusal for `code`; `class` comes from the closed table. A missing message defaults

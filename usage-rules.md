@@ -18,14 +18,19 @@ AshAffidavit runs the affidavit WASM engine on the BEAM and exposes it to Ash. F
   `{:trap, %AshAffidavit.Refusal{}}`, `{:unsupported, %AshAffidavit.Refusal{}}`. Match all four. Never
   collapse them into one error branch.
 - Declare the engine operations a resource uses with `extensions: [AshAffidavit.Resource]` and an
-  `affidavit` section. Read the declaration with `AshAffidavit.Resource.Info`.
+  `affidavit` section. Read the declaration with `AshAffidavit.Resource.Info.compiled/1` or
+  `AshAffidavit.Resource.Declared`.
 - Use `AshAffidavit.Change.Receipt` to run an op inside an action. Its evidence lands in
   `changeset.context` (default key `:affidavit`); a non-ok outcome adds an
   `AshAffidavit.Error.Refused` to the changeset.
+- Use `AshAffidavit.Reactor.Step` to run an op inside a Reactor (`{AshAffidavit.Reactor.Step, op: :commit}`);
+  a non-ok outcome is `{:error, %AshAffidavit.Refusal{}}`.
+- A response stating an authority above NONE is refused (`:authority_escalation`), never `{:ok, _}`.
 - Never edit generated files: `lib/ash_affidavit/{abi,wasm_config,engine_load,host,pool}.ex`,
-  `lib/mix/tasks/ash_affidavit.{vendor,verify}.ex`, `priv/affidavit/MANIFEST.json`. Change
-  `ontology/affidavit-binding.ttl` or `ontology/affidavit-contract.ttl` and regenerate with
-  `scripts/consume.sh`.
+  `lib/mix/tasks/ash_affidavit.{vendor,verify}.ex`, `priv/affidavit/MANIFEST.json` (regenerate with
+  `scripts/consume.sh` from `ontology/affidavit-{binding,contract}.ttl`) and
+  `lib/ash_affidavit/{resource,persist,verify,info}.ex` (regenerate with `scripts/render_extension.sh` from
+  `ontology/affidavit-extension.ttl`).
 
 ## Sub-rules
 
