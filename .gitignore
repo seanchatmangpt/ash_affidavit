@@ -9,3 +9,4 @@
 /tmp/
 /ash_affidavit-*.tar
 erl_crash.dump
+/_build-lane-*/
