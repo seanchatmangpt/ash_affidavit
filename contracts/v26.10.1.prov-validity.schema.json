@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "kind",
+    "subject",
+    "authority_ceiling",
+    "negative_knowledge"
+  ],
+  "properties": {
+    "kind": {
+      "const": "PROV_VALIDITY"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority_ceiling": {
+      "const": "VALIDATION_ONLY"
+    },
+    "negative_knowledge": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
