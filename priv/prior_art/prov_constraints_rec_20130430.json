@@ -1,0 +1,20 @@
+{
+  "schema": "prior-art-import/v1",
+  "donor": {
+    "standard": "W3C PROV-CONSTRAINTS",
+    "version": "REC-20130430",
+    "source": "https://www.w3.org/TR/2013/REC-prov-constraints-20130430/"
+  },
+  "required_capability": "provenance-validity",
+  "existing_entails_required": true,
+  "semantic_delta": "NONE",
+  "authority_ceiling": "EVIDENCE_VALIDATION_ONLY",
+  "do_authority": false,
+  "standing_promotion": false,
+  "exclusions": [
+    "truth",
+    "authorization",
+    "external-standing",
+    "semantic-equivalence"
+  ]
+}
