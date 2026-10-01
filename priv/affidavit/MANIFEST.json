@@ -1,0 +1,63 @@
+{
+  "schema": "ash_affidavit.affidavit.manifest/v1",
+  "affidavit_version": "26.9.30",
+  "abi_version": 1,
+  "artifact": {
+    "file": "affidavit.wasm",
+    "sha256": "1be9678b2ddcaf71a5c18926ffb94ee4fba9963877e3f4be081eef1d6f42f436",
+    "bytes": 264736,
+    "url": "https://github.com/seanchatmangpt/affidavit/releases/download/v26.9.30/affidavit.wasm"
+  },
+  "host_abi": {
+    "exports": [
+      "af_abi_version",
+      "af_alloc",
+      "af_call",
+      "af_free",
+      "memory"
+    ],
+    "import_module": "wasi_snapshot_preview1",
+    "imports": [
+      {
+        "name": "environ_get",
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ]
+      },
+      {
+        "name": "environ_sizes_get",
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ]
+      },
+      {
+        "name": "fd_write",
+        "params": [
+          "i32",
+          "i32",
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ]
+      },
+      {
+        "name": "proc_exit",
+        "params": [
+          "i32"
+        ],
+        "results": []
+      }
+    ]
+  },
+  "provenance": "local build of affidavit-wasm (cargo --target wasm32-wasip1 --profile wasm) from the affidavit checkout at f2076697b6b1d46d7c4c659968f5887410dbb784 (working tree had an uncommitted change in affidavit-wasm/tests/registry_artifacts.rs); pin equals affidavit-wasm/registry/ARTIFACTS.sha256; artifact.url is the intended release location and was NOT published or fetched by this build; the wasm is vendored in this package, so mix ash_affidavit.vendor --check needs no network"
+}

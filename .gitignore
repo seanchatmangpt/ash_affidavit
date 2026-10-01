@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+
+/_build/
+/deps/
+/doc/
+/cover/
+/tmp/
+/ash_affidavit-*.tar
+erl_crash.dump
