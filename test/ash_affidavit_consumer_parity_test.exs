@@ -44,26 +44,24 @@ defmodule AshAffidavit.ConsumerParityTest do
     end
   end
 
+  # Live regeneration needs python3.11 + ggen and ASH_AFFIDAVIT_PACK_ROOT; test_helper.exs excludes
+  # the :pack_root tag (with a stderr reason) when that variable is unset.
+  @tag :pack_root
   @tag timeout: 300_000
   test "consume.sh regenerates the committed files byte-for-byte" do
-    case System.get_env("ASH_AFFIDAVIT_PACK_ROOT") do
-      nil ->
-        IO.puts("ASH_AFFIDAVIT_PACK_ROOT unset: live regeneration not exercised")
+    pack_root = System.fetch_env!("ASH_AFFIDAVIT_PACK_ROOT")
+    out = Path.join(System.tmp_dir!(), "ash_affidavit_consume_#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf(out) end)
 
-      pack_root ->
-        out = Path.join(System.tmp_dir!(), "ash_affidavit_consume_#{System.unique_integer([:positive])}")
-        on_exit(fn -> File.rm_rf(out) end)
+    {log, status} =
+      System.cmd("bash", [Path.join(@root, "scripts/consume.sh"), "--out", out, "--pack-root", pack_root],
+        stderr_to_stdout: true
+      )
 
-        {log, status} =
-          System.cmd("bash", [Path.join(@root, "scripts/consume.sh"), "--out", out, "--pack-root", pack_root],
-            stderr_to_stdout: true
-          )
+    assert status == 0, log
 
-        assert status == 0, log
-
-        for f <- @generated do
-          assert File.read!(Path.join(out, f)) == File.read!(Path.join(@root, f)), "#{f} differs from regeneration"
-        end
+    for f <- @generated do
+      assert File.read!(Path.join(out, f)) == File.read!(Path.join(@root, f)), "#{f} differs from regeneration"
     end
   end
 end

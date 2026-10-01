@@ -1,0 +1,168 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+
+# Gates fail closed; none is advisory. This workflow only gates: it never publishes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - name: Refuse mix.lock drift
+        run: mix deps.get --check-locked
+      - name: Refuse retired or advisory Hex packages
+        run: mix hex.audit
+      - name: Audit dependencies against advisories
+        run: mix deps.audit
+      - name: Package closure (no build dirs, cover or tmp shipped; manifest, licenses and usage rules shipped)
+        run: |
+          set -euo pipefail
+          pkg="$RUNNER_TEMP/pkg"
+          rm -rf "$pkg"
+          mix hex.build --unpack -o "$pkg"
+          for p in priv/affidavit/MANIFEST.json LICENSES REUSE.toml usage-rules.md usage-rules documentation; do
+            test -e "$pkg/$p" || { echo "REFUSED(package:missing $p)" >&2; exit 2; }
+          done
+          for bad in '_build*' cover tmp; do
+            if find "$pkg" -name "$bad" | grep -q .; then
+              echo "REFUSED(package:ships $bad)" >&2
+              find "$pkg" -name "$bad" >&2
+              exit 2
+            fi
+          done
+
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MIX_ENV: dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix format --check-formatted
+      - run: mix compile --warnings-as-errors
+      - run: mix credo --strict
+      - run: mix sobelow --skip
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: priv/plts
+          key: ash-affidavit-plt-v1-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
+          restore-keys: |
+            ash-affidavit-plt-v1-${{ runner.os }}-
+      - run: mix dialyzer --plt
+      - run: mix dialyzer
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MIX_ENV: dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - name: Docs build (warnings are errors)
+        run: mix docs --warnings-as-errors
+
+  spark-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MIX_ENV: dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - name: Regenerate Spark formatter config and cheat sheets
+        run: |
+          set -euo pipefail
+          mix spark.formatter
+          mix spark.cheat_sheets
+      - name: Refuse Spark projection drift
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- documentation/dsls .formatter.exs; then
+            echo "REFUSED(spark:committed DSL docs or .formatter.exs differ from regeneration)" >&2
+            exit 2
+          fi
+          untracked="$(git ls-files --others --exclude-standard -- documentation/dsls)"
+          if [ -n "$untracked" ]; then
+            echo "REFUSED(spark:uncommitted DSL projection)" >&2
+            printf '%s\n' "$untracked" >&2
+            exit 2
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+      - name: Verify the vendored engine against its pin
+        run: mix ash_affidavit.verify
+      - name: Tests (real pinned wasm, no mocks)
+        run: mix test

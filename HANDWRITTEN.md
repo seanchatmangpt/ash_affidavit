@@ -20,6 +20,12 @@ around in the contract. Each hand-written source file carries the header
 | `lib/ash_affidavit.ex` | no pack template emits a public API over the host (op registry from the capability registry, ok/refused/trap/unsupported mapping, flat-code envelope decoding) |
 | `lib/ash_affidavit/application.ex` | no pack template emits an OTP application callback |
 | `priv/affidavit/capability-registry.json`, `op-examples.json` | copied from the engine repository's `registry/` (generated there by wasi-json-abi-pack); not generated here |
+| `lib/ash_affidavit/resource.ex`, `persist.ex`, `verify.ex`, `info.ex`, `formatter.ex` | no pack template emits a Spark DSL extension (section, transformer, verifier, info module, formatter helper) |
+| `lib/ash_affidavit/change/receipt.ex`, `validation/verified.ex`, `calculation/verdict.ex`, `notifier.ex` | no pack template emits Ash change, validation, calculation or notifier modules |
+| `lib/ash_affidavit/type/receipt.ex`, `type/chain_hash.ex` | no pack template emits Ash types |
+| `lib/ash_affidavit/error/refused.ex` | no pack template emits a Splode error; it wraps `AshAffidavit.Refusal`, which stays unchanged because the generated host aliases it |
+| `lib/mix/tasks/ash_affidavit.install.ex` | no pack template emits an Igniter installer |
+| `test/support/affidavit_resource.ex` | test fixture resource and domain; no pack template emits Ash fixtures |
 
 ## Generator gaps recorded as UNSUPPORTED(generator-capability)
 
@@ -32,11 +38,6 @@ around in the contract. Each hand-written source file carries the header
 | `qri:wasiImport`/`qri:allowedImport` rows are gate-checked against each other (gate 070) but never projected into the manifest or compared with the real module's import section | a test compares contract, manifest and real module imports |
 | no deps fragment is emitted (`jason`, `wasmex`, `telemetry` are required by the generated code) | declared by hand in `mix.exs` |
 | generated files carry no SPDX header | `REUSE.toml` annotation |
-
-## Not built (future work)
-
-An Ash extension point (DSL section, change, validation) is not shipped; `ash` and `spark` are
-declared dependencies for it. No pack in the beam-host set emits one, and it would be hand-written.
 
 ## See Also
 

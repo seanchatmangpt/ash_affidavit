@@ -1,4 +1,32 @@
-# CHANGELOG
+<!--
+SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+
+SPDX-License-Identifier: MIT
+-->
+
+# Changelog
+
+All notable changes to this project are recorded here. The version is CalVer (`YY.M.D`).
+
+<!-- changelog -->
+
+## [v26.9.30](https://github.com/seanchatmangpt/ash_affidavit/compare/v26.9.30...v26.9.30) (2026-09-30)
+
+Added surface (Ash extension and installer):
+
+- `AshAffidavit.Resource` Spark extension: an `affidavit` section with a `runtime` entity
+  (`wasm_path`, `timeout_ms`, `trusted_keys`, `server`, `singleton`) and `operation` entities;
+  `AshAffidavit.Resource.Persist`, `AshAffidavit.Resource.Verify` (unknown op, bad ceiling,
+  non-positive timeout, malformed trusted key, `singleton false` without `server`),
+  `AshAffidavit.Resource.Info`, `AshAffidavit.Formatter`.
+- `AshAffidavit.Change.Receipt`, `AshAffidavit.Validation.Verified`,
+  `AshAffidavit.Calculation.Verdict`, `AshAffidavit.Type.Receipt`, `AshAffidavit.Type.ChainHash`,
+  `AshAffidavit.Notifier`, `AshAffidavit.Error.Refused` (Splode wrapper of `AshAffidavit.Refusal`);
+  telemetry `[:ash_affidavit, :op, :stop]`.
+- `mix ash_affidavit.install` (Igniter; manual steps without Igniter).
+- CI, release and REUSE workflows; usage rules; `AGENTS.md`; documentation guides.
+
+Initial release contents:
 
 ## 26.9.30
 
