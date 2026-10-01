@@ -10,8 +10,9 @@ defmodule AshAffidavit do
   through `wasmex`).
 
   The engine builds and checks receipts over operation events (`commit`, `assemble`, `verify`),
-  mines process models from receipts (`mine`, `conform`) and checks a signing input
-  (`verify_signature_input`). `ops/0` lists the operations from the engine's own capability
+  mines process models from receipts (`mine`, `conform`) checks a signing input
+  (`verify_signature_input`) and certifies external AuthZEN and SPIFFE/SVID evidence
+  (`certify_authzen_evidence`, `certify_spiffe_evidence`; authority NONE, evidence only). `ops/0` lists the operations from the engine's own capability
   registry.
 
   ## Outcomes

@@ -118,7 +118,7 @@ defmodule AshAffidavit.AbiAndSurfaceTest do
     assert out =~ "Affidavit engine VERIFIED (abi_version 1)"
 
     out = capture_io(fn -> Mix.Tasks.AshAffidavit.Vendor.run(["--check"]) end)
-    assert out =~ "affidavit.wasm OK sha256=1be9678b"
+    assert out =~ "affidavit.wasm OK sha256=5e721cc2"
   end
 
   test "the contract's typed imports equal the manifest's imports and the real module's imports" do

@@ -12,8 +12,8 @@ defmodule AshAffidavit.PinnedWasmTest do
   @wasm Path.expand("../priv/affidavit/affidavit.wasm", __DIR__)
   @manifest Path.expand("../priv/affidavit/MANIFEST.json", __DIR__)
   # Independent copy of the pin published by the engine repo (registry/ARTIFACTS.sha256).
-  @engine_pin "1be9678b2ddcaf71a5c18926ffb94ee4fba9963877e3f4be081eef1d6f42f436"
-  @engine_size 264_736
+  @engine_pin "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
+  @engine_size 284_650
 
   defp sha256(bytes), do: :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
 

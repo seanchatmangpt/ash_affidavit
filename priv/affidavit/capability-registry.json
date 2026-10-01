@@ -58,6 +58,16 @@
       "name": "verify_signature_input",
       "request_fields": ["op", "envelope_json", "expected_signing_input_hex"],
       "response_fields": ["ok", "op", "verified", "signing_input_hex"]
+    },
+    {
+      "name": "certify_authzen_evidence",
+      "request_fields": ["op", "request", "decision", "policy_decision_point", "expected_policy_decision_point", "expected_principal", "expected_effect_digest"],
+      "response_fields": ["ok", "op", "certified", "standard", "policy_allows", "policy_decision_point", "principal", "effect_digest", "action", "authority", "consequence", "evidence_digest", "evidence"]
+    },
+    {
+      "name": "certify_spiffe_evidence",
+      "request_fields": ["op", "spiffe_id", "expected_spiffe_id", "expected_trust_domain", "bundle_digest", "verified", "svid_type", "allow_jwt"],
+      "response_fields": ["ok", "op", "certified", "standard", "spiffe_id", "trust_domain", "path", "svid_type", "authority", "consequence", "evidence_digest", "evidence"]
     }
   ],
   "schema": "wasi-json-abi.capability-registry/1"

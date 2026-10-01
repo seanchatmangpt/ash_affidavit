@@ -17,7 +17,8 @@ end
 
 The engine is vendored in `priv/affidavit/affidavit.wasm`. Its SHA-256 pin lives in
 `priv/affidavit/MANIFEST.json`; `mix ash_affidavit.vendor --check` and `mix ash_affidavit.verify`
-re-check it without network access.
+re-check it without network access. The `artifact.url` in the manifest is the intended release
+location and is a placeholder: it was not published or fetched; the vendored file is the source.
 
 ## Use
 
@@ -36,7 +37,7 @@ config :ash_affidavit, start_pool: true, pool: [size: 2]
 {:ok, %{"accepted" => true}} = AshAffidavit.call(%{"op" => "verify", "receipt" => assembled["receipt"]})
 
 AshAffidavit.ops()
-#=> ["capabilities", "commit", "assemble", "verify", "mine", "conform", "verify_signature_input"]
+#=> ["capabilities", "commit", "assemble", "verify", "mine", "conform", "verify_signature_input", "certify_authzen_evidence", "certify_spiffe_evidence"]
 ```
 
 Without `start_pool: true`, start `AshAffidavit.Pool` yourself, or `AshAffidavit.Host`, and pass
