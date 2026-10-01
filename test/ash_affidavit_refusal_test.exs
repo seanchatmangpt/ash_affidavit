@@ -29,6 +29,12 @@ defmodule AshAffidavit.RefusalTest do
     assert refusal.raw == %{"code" => "brand_new", "extra" => 1}
   end
 
+  test "a non-object request is the engine's missing_field refusal, not a crash" do
+    for bad <- [[1, 2], 5, "x", nil] do
+      assert {:refused, %Refusal{code: :missing_field, class: :refused_input}} = AshAffidavit.call(bad)
+    end
+  end
+
   test "the three outcomes stay distinct" do
     assert Refusal.outcome(Refusal.new(:bad_field)) == :refused
     assert Refusal.outcome(Refusal.new(:wasm_digest_mismatch)) == :refused

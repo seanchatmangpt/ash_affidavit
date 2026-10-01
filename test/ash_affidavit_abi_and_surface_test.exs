@@ -10,6 +10,8 @@ defmodule AshAffidavit.AbiAndSurfaceTest do
   alias AshAffidavit.EngineLoad
   alias AshAffidavit.Refusal
   alias AshAffidavit.WasmConfig
+  alias Mix.Tasks.AshAffidavit.Vendor
+  alias Mix.Tasks.AshAffidavit.Verify
 
   @wasm Path.expand("../priv/affidavit/affidavit.wasm", __DIR__)
 
@@ -114,10 +116,10 @@ defmodule AshAffidavit.AbiAndSurfaceTest do
   end
 
   test "mix ash_affidavit.verify and --check pass on the vendored engine" do
-    out = capture_io(fn -> Mix.Tasks.AshAffidavit.Verify.run([]) end)
+    out = capture_io(fn -> Verify.run([]) end)
     assert out =~ "Affidavit engine VERIFIED (abi_version 1)"
 
-    out = capture_io(fn -> Mix.Tasks.AshAffidavit.Vendor.run(["--check"]) end)
+    out = capture_io(fn -> Vendor.run(["--check"]) end)
     assert out =~ "affidavit.wasm OK sha256=5e721cc2"
   end
 

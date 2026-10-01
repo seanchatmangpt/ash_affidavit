@@ -2,64 +2,64 @@
 #
 # SPDX-License-Identifier: MIT
 
+# Host-profile contract for the affidavit WASM engine (affidavit-wasm, ABI 1, wasm32-wasip1), bound by
+# ontology/affidavit-binding.ttl. Values observed from the engine registry and the module's import/export
+# sections. qri:contractDigest is the RDFC-1.0 sha256 of this contract's closure (see scripts/consume.sh).
+# optionalExport _initialize is declared only because the host template fails to render without one.
+# Grants no execution authority.
+@prefix qcb:  <https://seanchatmangpt.github.io/packs/qri-consumer-binding-pack#> .
 @prefix qri:  <https://seanchatmangpt.github.io/packs/qri-qualification-profile-pack#> .
-@prefix af:   <urn:qri:example:ash-affidavit:> .
+@prefix ab:   <urn:qcb:binding:affidavit:> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix spdx: <http://spdx.org/rdf/terms#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
-# Host-profile contract for the affidavit WASM engine (affidavit-wasm, ABI 1, wasm32-wasip1).
-# Source of truth for the generated beam-host set under lib/ (see HANDWRITTEN.md and
-# scripts/render_host.sh). Values observed from:
-#   - /Users/sac/affidavit/affidavit-wasm/src/ffi.rs (af_alloc, af_free(ptr,len), af_call -> packed u64,
-#     af_abi_version; request buffer consumed by af_call)
-#   - registry/capability-registry.json (exports, error_codes, limits)
-#   - the import section and export section of priv/affidavit/affidavit.wasm (parsed, not assumed):
-#     imports environ_get, environ_sizes_get, fd_write, proc_exit; no _initialize export today.
-#     optionalExport _initialize is declared only because host.ex.tmpl fails to render without an
-#     optional export (generator gap); the host calls it only if the module exports it.
-# A qri:hostProfile contract is projected by queries/50-54 only. It grants no execution authority.
+ab:capability a qri:Capability .
 
-af:capability a qri:Capability .
-
-af:contract a qri:CapabilityContract ;
-    qri:specifiesCapability af:capability ;
+ab:contract a qri:CapabilityContract ;
+    qri:contractDigest "60dc0100b5d3a56131cdf2b9b8ebce83c024b3930963d95e7c888880c060c1e6" ;
+    qcb:registrySha256 "ebac457843cd2322af575f02583a4a2a2a11a2488de6ee0eabef468861ebe61b" ;
+    qri:specifiesCapability ab:capability ;
     qri:contractVersion "1.0.0" ;
     qri:abiSymbolPrefix "af" ;
     qri:abiKind "core-wasm-json" ;
     qri:abiVersion "1" ;
-    qri:invariantSet af:invariants ;
-    qri:refusalScheme af:refusals ;
-    qri:hostProfile af:host ;
+    qri:invariantSet ab:invariants ;
+    qri:refusalScheme ab:refusals ;
+    qri:hostProfile ab:host ;
     qri:allowedImport "wasi_snapshot_preview1::environ_get" ,
                       "wasi_snapshot_preview1::environ_sizes_get" ,
                       "wasi_snapshot_preview1::fd_write" ,
                       "wasi_snapshot_preview1::proc_exit" ;
     qri:requiredExport "af_alloc" , "af_call" , "af_free" , "af_abi_version" , "memory" ;
     qri:optionalExport "_initialize" ;
-    qri:wasiImport af:impEnvironGet , af:impEnvironSizesGet , af:impFdWrite , af:impProcExit ;
-    qri:operation af:opCall .
+    qri:wasiImport ab:impEnvironGet , ab:impEnvironSizesGet , ab:impFdWrite , ab:impProcExit ;
+    qri:operation ab:opCall .
 
-af:opCall a qri:Operation ; qri:opName "call" ; qri:input af:inRequest ; qri:output af:outResponse .
-af:inRequest a qri:Field ; qri:fieldName "request" ; qri:fieldType "bytes" ; qri:fieldOrder 1 .
-af:outResponse a qri:Field ; qri:fieldName "response" ; qri:fieldType "bytes" ; qri:fieldOrder 1 .
+ab:opCall a qri:Operation ; qri:opName "call" ; qri:input ab:inRequest ; qri:output ab:outResponse .
+ab:inRequest a qri:Field ; qri:fieldName "request" ; qri:fieldType "bytes" ; qri:fieldOrder 1 .
+ab:outResponse a qri:Field ; qri:fieldName "response" ; qri:fieldType "bytes" ; qri:fieldOrder 1 .
 
-af:invariants a qri:InvariantSet ; qri:requiresInvariant af:semanticResult , af:refusalBoundary , af:determinism .
-af:semanticResult a qri:Invariant ; qri:invariantKind qri:Semantic .
-af:refusalBoundary a qri:Invariant ; qri:invariantKind qri:Refusal .
-af:determinism a qri:Invariant ; qri:invariantKind qri:Determinism .
+ab:invariants a qri:InvariantSet ; qri:requiresInvariant ab:semanticResult , ab:refusalBoundary , ab:determinism .
+ab:semanticResult a qri:Invariant ; qri:invariantKind qri:Semantic .
+ab:refusalBoundary a qri:Invariant ; qri:invariantKind qri:Refusal .
+ab:determinism a qri:Invariant ; qri:invariantKind qri:Determinism .
 
 # Engine flat error codes (registry error_codes). Host-side refusals live in AshAffidavit.Refusal.
-af:refusals a skos:ConceptScheme .
-af:rBadJson a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "bad_json" .
-af:rMissingField a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "missing_field" .
-af:rUnknownOp a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "unknown_op" .
-af:rBadField a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "bad_field" .
-af:rTooLarge a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "too_large" .
-af:rTooDeep a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "too_deep" .
-af:rMissingBuffer a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "missing_buffer" .
-af:rInternal a qri:RefusalCode , skos:Concept ; skos:inScheme af:refusals ; qri:refusalCode "internal" .
+ab:refusals a skos:ConceptScheme .
+ab:rBadJson a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "bad_json" .
+ab:rMissingField a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "missing_field" .
+ab:rUnknownOp a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "unknown_op" .
+ab:rBadField a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "bad_field" .
+ab:rTooLarge a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "too_large" .
+ab:rTooDeep a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "too_deep" .
+ab:rMissingBuffer a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "missing_buffer" .
+ab:rInternal a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "internal" .
 
-af:host a qri:HostProfile ;
+ab:host a qri:HostProfile ;
     qri:freeSymbol "af_free" ; qri:freeArity 2 ; qri:lenType "u32" ;
     qri:allocZeroPolicy "refuse-resource_limit" ; qri:reqConsumed true ;
     qri:outMode "packed_u64" ; qri:errorCollapse "flat_code" ;
@@ -72,31 +72,31 @@ af:host a qri:HostProfile ;
     qri:poolStrategy "rest_for_one" ; qri:poolSizeSource "schedulers_online" ;
     qri:engineId "Affidavit" ; qri:probeOp "capabilities" ; qri:probeExpectKey "abi_version" ;
     qri:recycleOn "abi_failure" , "call_exited" , "call_trapped" , "call_timeout" , "fuel_exhausted" ;
-    qri:hostLimit af:limFuelPerMs , af:limInstantiateFuel , af:limMemoryLimitBytes , af:limRecycleBytes , af:limMaxQueue , af:limMaxResponseBytes , af:limTableElements , af:limInstances , af:limTables , af:limMemories , af:limTimeoutMs , af:limAbiTimeout , af:limMargin , af:limRetryBaseMs , af:limRetryMaxMs , af:limInitializeTimeoutMult , af:limBackoffExpCap , af:limMaxRedirects .
+    qri:hostLimit ab:limFuelPerMs , ab:limInstantiateFuel , ab:limMemoryLimitBytes , ab:limRecycleBytes , ab:limMaxQueue , ab:limMaxResponseBytes , ab:limTableElements , ab:limInstances , ab:limTables , ab:limMemories , ab:limTimeoutMs , ab:limAbiTimeout , ab:limMargin , ab:limRetryBaseMs , ab:limRetryMaxMs , ab:limInitializeTimeoutMult , ab:limBackoffExpCap , ab:limMaxRedirects .
 
 # Limits: ash_graphlaw defaults reused unchanged (the engine states stack_size_bytes 16 MiB and
 # max_json_depth 64 itself; the host limits below bound the host side only).
-af:limFuelPerMs a qri:HostLimit ; qri:limitName "fuel_per_ms" ; qri:limitDefault 1000000 ; qri:limitOrder 1 .
-af:limInstantiateFuel a qri:HostLimit ; qri:limitName "instantiate_fuel" ; qri:limitDefault 1000000000 ; qri:limitOrder 2 .
-af:limMemoryLimitBytes a qri:HostLimit ; qri:limitName "memory_limit_bytes" ; qri:limitDefault 268435456 ; qri:limitOrder 3 .
-af:limRecycleBytes a qri:HostLimit ; qri:limitName "recycle_bytes" ; qri:limitDefault 134217728 ; qri:limitOrder 4 .
-af:limMaxQueue a qri:HostLimit ; qri:limitName "max_queue" ; qri:limitDefault 64 ; qri:limitOrder 5 .
-af:limMaxResponseBytes a qri:HostLimit ; qri:limitName "max_response_bytes" ; qri:limitDefault 33554432 ; qri:limitOrder 6 .
-af:limTableElements a qri:HostLimit ; qri:limitName "table_elements" ; qri:limitDefault 100000 ; qri:limitOrder 7 .
-af:limInstances a qri:HostLimit ; qri:limitName "instances" ; qri:limitDefault 10 ; qri:limitOrder 8 .
-af:limTables a qri:HostLimit ; qri:limitName "tables" ; qri:limitDefault 10 ; qri:limitOrder 9 .
-af:limMemories a qri:HostLimit ; qri:limitName "memories" ; qri:limitDefault 4 ; qri:limitOrder 10 .
-af:limTimeoutMs a qri:HostLimit ; qri:limitName "timeout_ms" ; qri:limitDefault 5000 ; qri:limitOrder 11 .
-af:limAbiTimeout a qri:HostLimit ; qri:limitName "abi_timeout" ; qri:limitDefault 1000 ; qri:limitOrder 12 .
-af:limMargin a qri:HostLimit ; qri:limitName "margin" ; qri:limitDefault 1000 ; qri:limitOrder 13 .
-af:limRetryBaseMs a qri:HostLimit ; qri:limitName "retry_base_ms" ; qri:limitDefault 500 ; qri:limitOrder 14 .
-af:limRetryMaxMs a qri:HostLimit ; qri:limitName "retry_max_ms" ; qri:limitDefault 30000 ; qri:limitOrder 15 .
-af:limInitializeTimeoutMult a qri:HostLimit ; qri:limitName "initialize_timeout_mult" ; qri:limitDefault 10 ; qri:limitOrder 16 .
-af:limBackoffExpCap a qri:HostLimit ; qri:limitName "backoff_exp_cap" ; qri:limitDefault 16 ; qri:limitOrder 17 .
-af:limMaxRedirects a qri:HostLimit ; qri:limitName "max_redirects" ; qri:limitDefault 5 ; qri:limitOrder 18 .
+ab:limFuelPerMs a qri:HostLimit ; qri:limitName "fuel_per_ms" ; qri:limitDefault 1000000 ; qri:limitOrder 1 .
+ab:limInstantiateFuel a qri:HostLimit ; qri:limitName "instantiate_fuel" ; qri:limitDefault 1000000000 ; qri:limitOrder 2 .
+ab:limMemoryLimitBytes a qri:HostLimit ; qri:limitName "memory_limit_bytes" ; qri:limitDefault 268435456 ; qri:limitOrder 3 .
+ab:limRecycleBytes a qri:HostLimit ; qri:limitName "recycle_bytes" ; qri:limitDefault 134217728 ; qri:limitOrder 4 .
+ab:limMaxQueue a qri:HostLimit ; qri:limitName "max_queue" ; qri:limitDefault 64 ; qri:limitOrder 5 .
+ab:limMaxResponseBytes a qri:HostLimit ; qri:limitName "max_response_bytes" ; qri:limitDefault 33554432 ; qri:limitOrder 6 .
+ab:limTableElements a qri:HostLimit ; qri:limitName "table_elements" ; qri:limitDefault 100000 ; qri:limitOrder 7 .
+ab:limInstances a qri:HostLimit ; qri:limitName "instances" ; qri:limitDefault 10 ; qri:limitOrder 8 .
+ab:limTables a qri:HostLimit ; qri:limitName "tables" ; qri:limitDefault 10 ; qri:limitOrder 9 .
+ab:limMemories a qri:HostLimit ; qri:limitName "memories" ; qri:limitDefault 4 ; qri:limitOrder 10 .
+ab:limTimeoutMs a qri:HostLimit ; qri:limitName "timeout_ms" ; qri:limitDefault 5000 ; qri:limitOrder 11 .
+ab:limAbiTimeout a qri:HostLimit ; qri:limitName "abi_timeout" ; qri:limitDefault 1000 ; qri:limitOrder 12 .
+ab:limMargin a qri:HostLimit ; qri:limitName "margin" ; qri:limitDefault 1000 ; qri:limitOrder 13 .
+ab:limRetryBaseMs a qri:HostLimit ; qri:limitName "retry_base_ms" ; qri:limitDefault 500 ; qri:limitOrder 14 .
+ab:limRetryMaxMs a qri:HostLimit ; qri:limitName "retry_max_ms" ; qri:limitDefault 30000 ; qri:limitOrder 15 .
+ab:limInitializeTimeoutMult a qri:HostLimit ; qri:limitName "initialize_timeout_mult" ; qri:limitDefault 10 ; qri:limitOrder 16 .
+ab:limBackoffExpCap a qri:HostLimit ; qri:limitName "backoff_exp_cap" ; qri:limitDefault 16 ; qri:limitOrder 17 .
+ab:limMaxRedirects a qri:HostLimit ; qri:limitName "max_redirects" ; qri:limitDefault 5 ; qri:limitOrder 18 .
 
 # WASI imports exactly as parsed from the module's import section (all (i32,...)->i32 except proc_exit).
-af:impEnvironGet a qri:WasiImport ; qri:importName "environ_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .
-af:impEnvironSizesGet a qri:WasiImport ; qri:importName "environ_sizes_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .
-af:impFdWrite a qri:WasiImport ; qri:importName "fd_write" ; qri:importParams "i32,i32,i32,i32" ; qri:importResults "i32" .
-af:impProcExit a qri:WasiImport ; qri:importName "proc_exit" ; qri:importParams "i32" ; qri:importResults "" .
+ab:impEnvironGet a qri:WasiImport ; qri:importName "environ_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .
+ab:impEnvironSizesGet a qri:WasiImport ; qri:importName "environ_sizes_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .
+ab:impFdWrite a qri:WasiImport ; qri:importName "fd_write" ; qri:importParams "i32,i32,i32,i32" ; qri:importResults "i32" .
+ab:impProcExit a qri:WasiImport ; qri:importName "proc_exit" ; qri:importParams "i32" ; qri:importResults "" .

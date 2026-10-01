@@ -66,7 +66,14 @@ defmodule AshAffidavit do
   `AshAffidavit.Pool`), `:timeout_ms`.
   """
   @spec call(request(), keyword()) :: result()
-  def call(request, opts \\ []) when is_map(request) and is_list(opts) do
+  def call(request, opts \\ [])
+
+  # A non-object request (array, scalar) is the engine's own `missing_field` refusal, not a crash.
+  def call(request, opts) when not is_map(request) and is_list(opts) do
+    wrap(Refusal.from_engine(%{"code" => "missing_field", "message" => "request must be a JSON object"}))
+  end
+
+  def call(request, opts) when is_map(request) and is_list(opts) do
     {server, host_opts} = Keyword.pop(opts, :server)
 
     server
@@ -90,10 +97,50 @@ defmodule AshAffidavit do
   @spec registry() :: map()
   def registry, do: @registry
 
+  @doc """
+  True when the response states no authority above NONE.
+
+  The engine states `authority` only at the top level and inside `evidence` (the two certify ops,
+  always `"NONE"`). Absent counts as NONE. `call/2` refuses (`:authority_escalation`) any `{:ok, _}`
+  for which this is false, so no Ash change, validation, calculation or notifier can carry such a
+  response. The check reads those two places only: other fields echo caller input and are data.
+
+      iex> AshAffidavit.authority_none?(%{"ok" => true, "authority" => "NONE"})
+      true
+      iex> AshAffidavit.authority_none?(%{"ok" => true})
+      true
+      iex> AshAffidavit.authority_none?(%{"ok" => true, "authority" => "CONSTRUCT"})
+      false
+      iex> AshAffidavit.authority_none?(%{"ok" => true, "evidence" => %{"authority" => "SELECT"}})
+      false
+  """
+  @spec authority_none?(map()) :: boolean()
+  def authority_none?(response) when is_map(response) do
+    none?(Map.get(response, "authority")) and none?(get_in_authority(Map.get(response, "evidence")))
+  end
+
+  defp get_in_authority(%{"authority" => authority}), do: authority
+  defp get_in_authority(_), do: nil
+
+  defp none?(nil), do: true
+  defp none?(value) when is_binary(value), do: String.upcase(value) == "NONE"
+  defp none?(_), do: false
+
   defp route(nil, request, opts), do: Pool.request(request, opts)
   defp route(server, request, opts), do: Host.request(server, request, opts)
 
-  defp classify({:ok, %{"ok" => true} = response}), do: {:ok, response}
+  defp classify({:ok, %{"ok" => true} = response}) do
+    if authority_none?(response) do
+      {:ok, response}
+    else
+      wrap(
+        Refusal.new(:authority_escalation, "engine response states an authority other than NONE", %{
+          authority: inspect(response["authority"]),
+          evidence_authority: inspect(get_in_authority(response["evidence"]))
+        })
+      )
+    end
+  end
 
   defp classify({:ok, %{"ok" => false, "error" => error}}), do: wrap(Refusal.from_engine(error))
 

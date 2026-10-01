@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Pin of everything scripts/consume.sh consumes. pack_commit is the marketplace commit that landed the pack
+# (PR ggen-marketplace#557, base pack_base_commit); the pack is read from an export of exactly that commit.
+# pack_fingerprint is scripts/pack_fingerprint.py over the pack directory (caches excluded); consume.sh refuses a stale
+# one. Pins carry no authority: authority_ceiling stays NONE.
+schema = "ash_affidavit.consumer-pack.pin/1"
+pack = "qri-consumer-binding-pack"
+pack_version = "26.9.30"
+pack_commit = "20ff9279f4eaddc1e4fbf00f79ae6ad44c0f7732"
+pack_base_commit = "80d429f13cc887f66855ba4029f6d83aa3a8098f"
+pack_fingerprint = "sha256:35a75ac3b2cd65a80e3fdbc749ad8c447ba6c6ca02ad5c6d577a4f6fc8b164bf"
+pack_content_digest = "f1015c198374e5e9b3bf629dabb90a90a32127f5a60caa57fcb3d9dc61568bda"
+generator_version = "26.9.28"
+affidavit_base_commit = "8749f0be1ce6836b1c6f30b8ac2957ae0d2ec345"
+affidavit_commit = "16aa537f5c50ea50ea913a4e500b337e24837774"
+artifact_sha256 = "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
+artifact_bytes = 284650
+artifact_pin_registry_sha256 = "ebac457843cd2322af575f02583a4a2a2a11a2488de6ee0eabef468861ebe61b"
+contract_digest = "60dc0100b5d3a56131cdf2b9b8ebce83c024b3930963d95e7c888880c060c1e6"
+authority_ceiling = "NONE"
+
+# ash-extension-pack: source of the generated Spark/Igniter surface (scripts/render_extension.sh). The export is
+# read at ext_pack_base_commit (== marketplace origin/main at the time; pack unchanged since) and refused unless its
+# content digest equals the pin. No authority.
+ext_pack = "ash-extension-pack"
+ext_pack_version = "0.3.0"
+ext_pack_base_commit = "80d429f13cc887f66855ba4029f6d83aa3a8098f"
+ext_pack_content_digest = "978decb1f420589b5c0d1f714d54a5949b5f23c15feb27d88e414cb0e992635e"
+
+# sha256 of each generated file as written by consume.sh (checked by test/ash_affidavit_consumer_parity_test.exs)
+[generated]
+"lib/ash_affidavit/abi.ex" = "d07cc2762cc59d58f80e89ed7f1c0af6fa718dcc61bf038ad50ff66b243bf669"
+"lib/ash_affidavit/wasm_config.ex" = "9c3fd6049115d23d52ae6ac6aa9e6600d3465af1fbca5541a71ee58fd4c938d0"
+"lib/ash_affidavit/engine_load.ex" = "fbb0e2927498aa9691045cde8a242ce2ff8fe88d43b96a61a085d31979fb08b6"
+"lib/ash_affidavit/host.ex" = "7e0a2a517d1bdabfba55b4d52472dc86f805875fe456db4e959051b820a4e267"
+"lib/ash_affidavit/pool.ex" = "f3cd7fb0a06b1528b09883187d68b5edb98330ebd6d480c154b57a59a2fdb638"
+"lib/mix/tasks/ash_affidavit.vendor.ex" = "54da31a3c98049bc18c62827d4ffaa6770a8c03326278adcd31deb58411dccbb"
+"lib/mix/tasks/ash_affidavit.verify.ex" = "e65d12348b003bb67cdf4278c0128b5a5b9c6dd9b48d75894167005b05c95ed4"
+"priv/affidavit/MANIFEST.json" = "20dd7a084f7efd3fc08b0148bc814c0cfef5d394bb4d2c6bfd33a8b022f0974e"
