@@ -3,12 +3,14 @@
 Ledger of every hand-written element that no pack capability emits, and of generator gaps worked
 around in the contract. Each hand-written source file carries the header
 `# UNSUPPORTED(generator-capability): <reason>`. Generated files are never hand-edited; change
-`ontology/affidavit-contract.ttl` and run `scripts/render_host.sh`.
+`ontology/affidavit-binding.ttl` or `ontology/affidavit-contract.ttl` and run `scripts/consume.sh`
+(pack and artifact pins in `consumer-pack.pin`).
 
-## Generated (qri-qualification-profile-pack, beam-host set, queries 50-54)
+## Generated (qri-consumer-binding-pack, profile beam-wasmex)
 
 `lib/ash_affidavit/abi.ex`, `wasm_config.ex`, `engine_load.ex`, `host.ex`, `pool.ex`,
-`lib/mix/tasks/ash_affidavit.vendor.ex`, `lib/mix/tasks/ash_affidavit.verify.ex`.
+`lib/mix/tasks/ash_affidavit.vendor.ex`, `lib/mix/tasks/ash_affidavit.verify.ex`,
+`priv/affidavit/MANIFEST.json`.
 
 ## Hand-written residue
 
@@ -17,7 +19,6 @@ around in the contract. Each hand-written source file carries the header
 | `lib/ash_affidavit/refusal.ex` | no pack template emits a per-contract refusal module; the generated host aliases `qri:refusalModule` and calls `Refusal.new/3` with 17 host codes the contract does not declare; the flat engine error-code mapping (class and outcome policy) is hand policy |
 | `lib/ash_affidavit.ex` | no pack template emits a public API over the host (op registry from the capability registry, ok/refused/trap/unsupported mapping, flat-code envelope decoding) |
 | `lib/ash_affidavit/application.ex` | no pack template emits an OTP application callback |
-| `priv/affidavit/MANIFEST.json` | no pack template emits the manifest; its `host_abi.imports` and `exports` duplicate the contract's `qri:wasiImport` and `qri:requiredExport` rows (kept equal by a test) |
 | `priv/affidavit/capability-registry.json`, `op-examples.json` | copied from the engine repository's `registry/` (generated there by wasi-json-abi-pack); not generated here |
 
 ## Generator gaps recorded as UNSUPPORTED(generator-capability)
@@ -39,4 +40,5 @@ declared dependencies for it. No pack in the beam-host set emits one, and it wou
 
 ## See Also
 
-`ontology/affidavit-contract.ttl`, `scripts/render_host.sh`
+`ontology/affidavit-binding.ttl`, `ontology/affidavit-contract.ttl`, `scripts/consume.sh`,
+`consumer-pack.pin`

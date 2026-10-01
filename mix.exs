@@ -57,7 +57,8 @@ defmodule AshAffidavit.MixProject do
     [
       maintainers: ["ash_affidavit contributors"],
       licenses: ["MIT"],
-      files: ~w(lib priv ontology scripts .formatter.exs mix.exs README.md LICENSE CHANGELOG.md HANDWRITTEN.md),
+      files:
+        ~w(lib priv ontology scripts consumer-pack.pin .formatter.exs mix.exs README.md LICENSE CHANGELOG.md HANDWRITTEN.md),
       links: %{
         "GitHub" => @github_url,
         "Changelog" => "#{@github_url}/blob/main/CHANGELOG.md"

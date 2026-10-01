@@ -17,8 +17,8 @@ end
 
 The engine is vendored in `priv/affidavit/affidavit.wasm`. Its SHA-256 pin lives in
 `priv/affidavit/MANIFEST.json`; `mix ash_affidavit.vendor --check` and `mix ash_affidavit.verify`
-re-check it without network access. The `artifact.url` in the manifest is the intended release
-location and is a placeholder: it was not published or fetched; the vendored file is the source.
+re-check it without network access. The `artifact.url` in the manifest is the published release asset
+(affidavit v26.9.28); the vendored file is the source and needs no network.
 
 ## Use
 
@@ -64,8 +64,9 @@ from `wasi_snapshot_preview1`), required exports (`af_alloc`, `af_call`, `af_fre
 ## Provenance of the host code
 
 `lib/ash_affidavit/{abi,wasm_config,engine_load,host,pool}.ex` and the two Mix tasks are generated
-from `ontology/affidavit-contract.ttl` by the qri-qualification-profile-pack beam-host projection
-(`scripts/render_host.sh`). Change the contract, not those files. The hand-written residue and why
+from `ontology/affidavit-binding.ttl` and `ontology/affidavit-contract.ttl` by the
+qri-consumer-binding-pack (`scripts/consume.sh`, pins in `consumer-pack.pin`). Change the binding or
+contract, not those files. The hand-written residue and why
 it is hand-written is listed in `HANDWRITTEN.md`.
 
 ## Not included

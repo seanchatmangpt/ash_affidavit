@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 ash_affidavit contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Pin of everything scripts/consume.sh consumes. pack_commit is filled by the coordinator with the final
+# marketplace commit SHA; until then the pack is read from PACK_ROOT (scratch export of base_commit + overlay).
+# Pins carry no authority: authority_ceiling stays NONE.
+schema = "ash_affidavit.consumer-pack.pin/1"
+pack = "qri-consumer-binding-pack"
+pack_version = "26.9.30"
+pack_commit = "PENDING_COORDINATOR"
+pack_base_commit = "e304919223c1f2254102ee96667273c68110ace6"
+pack_fingerprint = "sha256:55f308aeb6da5fa2ae7e2a284bd04230f338e42394b6a18673ab0d362869a159"
+pack_content_digest = "78a6f259a2cec02376b8eb1739e617e9916d0ea43f21ad4ff4a33814e8fc60c2"
+ggen_version = "26.9.28"
+affidavit_base_commit = "8749f0be1ce6836b1c6f30b8ac2957ae0d2ec345"
+affidavit_commit = "PENDING_COORDINATOR"
+artifact_sha256 = "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
+artifact_bytes = 284650
+artifact_pin_registry_sha256 = "ebac457843cd2322af575f02583a4a2a2a11a2488de6ee0eabef468861ebe61b"
+contract_digest = "60dc0100b5d3a56131cdf2b9b8ebce83c024b3930963d95e7c888880c060c1e6"
+authority_ceiling = "NONE"
+
+# sha256 of each generated file as written by consume.sh (checked by test/ash_affidavit_consumer_parity_test.exs)
+[generated]
+"lib/ash_affidavit/abi.ex" = "d07cc2762cc59d58f80e89ed7f1c0af6fa718dcc61bf038ad50ff66b243bf669"
+"lib/ash_affidavit/wasm_config.ex" = "480f8f7535368d9d5f1578703b43efe7697554f7c8c8f4888ae6c82eebda0e53"
+"lib/ash_affidavit/engine_load.ex" = "fbb0e2927498aa9691045cde8a242ce2ff8fe88d43b96a61a085d31979fb08b6"
+"lib/ash_affidavit/host.ex" = "7e0a2a517d1bdabfba55b4d52472dc86f805875fe456db4e959051b820a4e267"
+"lib/ash_affidavit/pool.ex" = "f3cd7fb0a06b1528b09883187d68b5edb98330ebd6d480c154b57a59a2fdb638"
+"lib/mix/tasks/ash_affidavit.vendor.ex" = "54da31a3c98049bc18c62827d4ffaa6770a8c03326278adcd31deb58411dccbb"
+"lib/mix/tasks/ash_affidavit.verify.ex" = "e65d12348b003bb67cdf4278c0128b5a5b9c6dd9b48d75894167005b05c95ed4"
+"priv/affidavit/MANIFEST.json" = "20dd7a084f7efd3fc08b0148bc814c0cfef5d394bb4d2c6bfd33a8b022f0974e"
