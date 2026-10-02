@@ -10,6 +10,14 @@ All notable changes to this project are recorded here. The version is CalVer (`Y
 
 <!-- changelog -->
 
+## [v26.10.1](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.10.1) (2026-10-01)
+
+First publication on hex.pm.
+
+- Package metadata completed for hex publication (description, maintainers, licenses, files, links).
+- Version bumped to 26.10.1; install snippets in the README, usage rules and getting-started guide
+  updated to `~> 26.10.1`.
+
 ## [v26.9.30](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.9.30) (2026-09-30)
 
 Added surface (Ash extension and installer):

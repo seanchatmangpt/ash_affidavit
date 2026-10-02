@@ -25,7 +25,7 @@ Manual steps: add the dependencies, then add `import_deps: [:ash_affidavit]` to 
 ```elixir
 def deps do
   [
-    {:ash_affidavit, "~> 26.9.30"},
+    {:ash_affidavit, "~> 26.10.1"},
     {:wasmex, "~> 0.15.1"}
   ]
 end
