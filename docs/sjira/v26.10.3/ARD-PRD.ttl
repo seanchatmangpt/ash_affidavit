@@ -1,0 +1,238 @@
+@prefix sj: <https://ggen-igniter.dev/ontology/semantic-jira#> .
+@prefix prd: <https://ggen-igniter.dev/sjira/v26.10.3/ash-affidavit-prd#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Product Requirements Document for seanchatmangpt/ash_affidavit v26.10.1,
+# authored as RDF/Turtle. Factual descriptions of observed repository
+# capability only. This graph authors NO sj:WorkOrder and NO sj:Receipt;
+# it grants no authority and claims no standing. Every requirement names a
+# real test path; every claim names its falsifier.
+
+prd:PRD-ASH-AFFIDAVIT-v26.10.1
+    a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-ASH-AFFIDAVIT-v26.10.1" ;
+    rdfs:label "ash_affidavit v26.10.1 product requirements" ;
+    dcterms:description "Elixir/Ash package around the affidavit WASM receipt and process-mining engine (Rust compiled to wasm32-wasip1, vendored at priv/affidavit/affidavit.wasm, 284650 bytes, sha256 5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7, pinned in priv/affidavit/MANIFEST.json, executed on the BEAM through wasmex). The package builds and checks receipts over operation events, mines process models, checks signing inputs, and grants no execution authority." ;
+    dcterms:source "https://github.com/seanchatmangpt/ash_affidavit" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:version "26.10.1" ;
+    sj:authorityCeiling "NONE" ;
+    sj:evidenceHorizon "LOCAL_EXECUTION_VERIFIED" ;
+    sj:replayIdentity "semantic-jira:v26.10.3:PRD-ASH-AFFIDAVIT-v26.10.1" ;
+    sj:observedVerification "mix test on the canonical checkout completed with 11 doctests, 100 tests, 0 failures (5 excluded) in 6.4 seconds" ;
+    dcterms:hasPart
+        prd:goal-pinned-engine,
+        prd:goal-typed-refusals,
+        prd:goal-authority-none,
+        prd:goal-deterministic-replay,
+        prd:goal-tamper-detection,
+        prd:goal-ash-integration,
+        prd:goal-generated-provenance ;
+    sj:falsifier
+        prd:falsifier-authority-escalation-observed,
+        prd:falsifier-digest-pin-bypass,
+        prd:falsifier-replay-divergence,
+        prd:falsifier-outcome-collapse,
+        prd:falsifier-hand-edit-generated ;
+    sj:exclusion
+        "This PRD is a requirement/observation document; it authors no WorkOrder, no Receipt, and no standing.",
+        "No response from the engine is an authorization, a DO receipt, or a standing.",
+        "No prose or RDF description of the package substitutes for running the test suite on the exact subject." .
+
+# ── Goal area 1: pinned engine admission ─────────────────────────────────────
+
+prd:goal-pinned-engine a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G1" ;
+    rdfs:label "Pinned, digest-verified engine admission" ;
+    dcterms:description "Before any WASM instance exists the engine bytes are judged in order: SHA-256 against the MANIFEST.json pin, compile, import surface restricted to exactly environ_get, environ_sizes_get, fd_write, proc_exit from wasi_snapshot_preview1, and required exports af_alloc, af_call, af_free, af_abi_version, memory. Requests are capped at 16 MiB. mix ash_affidavit.vendor --check and mix ash_affidavit.verify re-check the pin without network access." ;
+    sj:pathScope "priv/affidavit/MANIFEST.json priv/affidavit/affidavit.wasm lib/ash_affidavit/engine_load.ex lib/ash_affidavit/wasm_config.ex lib/mix/tasks/ash_affidavit.vendor.ex lib/mix/tasks/ash_affidavit.verify.ex" ;
+    sj:requirement prd:req-pin-resolution,
+                   prd:req-import-surface,
+                   prd:req-abi-probe ;
+    dcterms:source "README.md#engine-admission HANDWRITTEN.md" .
+
+prd:req-pin-resolution a sj:EvidenceRequirement ;
+    rdfs:label "Digest pin resolution and refusal" ;
+    dcterms:description "A vendored engine whose SHA-256 differs from the manifest pin is refused before compile. Anchored by test/ash_affidavit_pinned_wasm_test.exs and test/ash_affidavit_pin_resolution_courts_test.exs." .
+
+prd:req-import-surface a sj:EvidenceRequirement ;
+    rdfs:label "Contract, manifest and module import agreement" ;
+    dcterms:description "The contract's declared WASI imports, the manifest, and the real module's import section are compared and must agree. Anchored by test/ash_affidavit_abi_and_surface_test.exs." .
+
+prd:req-abi-probe a sj:EvidenceRequirement ;
+    rdfs:label "af_abi_version matches the manifest" ;
+    dcterms:description "af_abi_version is called through wasmex and compared to the manifest abi_version (1). Anchored by test/ash_affidavit_abi_and_surface_test.exs." .
+
+# ── Goal area 2: typed refusals, four distinct outcomes ──────────────────────
+
+prd:goal-typed-refusals a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G2" ;
+    rdfs:label "Typed refusals with a closed code set and four distinct outcomes" ;
+    dcterms:description "AshAffidavit.call/2 keeps four outcomes distinct: {:ok, map} (engine answered ok true), {:refused, %AshAffidavit.Refusal{}} (bad input such as bad_field, missing_field, too_deep, or host refusal on digest pin, import surface, oversize request, saturation), {:trap, %AshAffidavit.Refusal{}} (engine or host failed at run time; the host recycles the instance), {:unsupported, %AshAffidavit.Refusal{}} (unknown op or an engine error code this library does not know). The Refusal code set is closed: host codes plus the engine's flat error codes read from priv/affidavit/capability-registry.json, with a compile-time check that every registry error code is classified." ;
+    sj:pathScope "lib/ash_affidavit/refusal.ex lib/ash_affidavit.ex lib/ash_affidavit/host.ex lib/ash_affidavit/pool.ex" ;
+    sj:requirement prd:req-outcome-distinction,
+                   prd:req-closed-code-set ;
+    dcterms:source "README.md#outcomes HANDWRITTEN.md" .
+
+prd:req-outcome-distinction a sj:EvidenceRequirement ;
+    rdfs:label "Refused, trap and unsupported stay distinguishable" ;
+    dcterms:description "Bad input refuses; runtime failure traps and recycles; unknown ops return unsupported; the three never collapse into {:ok, _}. Anchored by test/ash_affidavit_refusal_test.exs and test/ash_affidavit_limits_test.exs." .
+
+prd:req-closed-code-set a sj:EvidenceRequirement ;
+    rdfs:label "Every registry error code is classified" ;
+    dcterms:description "A compile-time check in AshAffidavit.Refusal fails the build if a capability-registry error code has no classification. Anchored by test/ash_affidavit_refusal_test.exs." .
+
+# ── Goal area 3: authority NONE ──────────────────────────────────────────────
+
+prd:goal-authority-none a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G3" ;
+    rdfs:label "Authority stays NONE across every op and integration surface" ;
+    dcterms:description "AshAffidavit.call/2 refuses (:authority_escalation, class :refused_authority) any {:ok, _} whose authority field, top level or inside evidence, is above NONE, so no change, validation, calculation or notifier can carry such a response. The same ceiling holds across all nine engine ops: capabilities, commit, assemble, verify, mine, conform, verify_signature_input, certify_authzen_evidence, certify_spiffe_evidence." ;
+    sj:pathScope "lib/ash_affidavit.ex lib/ash_affidavit/refusal.ex lib/ash_affidavit/change/receipt.ex lib/ash_affidavit/validation/verified.ex lib/ash_affidavit/calculation/verdict.ex lib/ash_affidavit/notifier.ex" ;
+    sj:requirement prd:req-authority-guard,
+                   prd:req-ash-authority ;
+    dcterms:source "README.md#ash-extension CHANGELOG.md v26.9.30" .
+
+prd:req-authority-guard a sj:EvidenceRequirement ;
+    rdfs:label "call/2 refuses authority above NONE" ;
+    dcterms:description "A response asserting authority above NONE produces {:refused, %Refusal{code: :authority_escalation}}. Anchored by test/ash_affidavit_authority_none_test.exs." .
+
+prd:req-ash-authority a sj:EvidenceRequirement ;
+    rdfs:label "Ash surfaces inherit the NONE ceiling" ;
+    dcterms:description "Refused, trapped and unsupported outcomes fail the Ash action with AshAffidavit.Error.Refused carrying the typed refusal; no extension surface widens authority. Anchored by test/ash_affidavit_ash_authority_test.exs." .
+
+# ── Goal area 4: deterministic op replay ─────────────────────────────────────
+
+prd:goal-deterministic-replay a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G4" ;
+    rdfs:label "Op replay with byte-identical determinism" ;
+    dcterms:description "The engine is a pure computation over the exact request: repeating an operation with the same input yields the same output, and the assemble, verify and mine round trip closes (assemble events into a receipt, verify accepts it, mine derives a process model). A response is the engine's computation over exactly the request sent." ;
+    sj:pathScope "lib/ash_affidavit.ex lib/ash_affidavit/host.ex priv/affidavit/op-examples.json" ;
+    sj:requirement prd:req-op-replay,
+                   prd:req-round-trip ;
+    dcterms:source "README.md#use" .
+
+prd:req-op-replay a sj:EvidenceRequirement ;
+    rdfs:label "Same request, same response" ;
+    dcterms:description "Replaying engine ops produces byte-identical results. Anchored by test/ash_affidavit_op_replay_test.exs." .
+
+prd:req-round-trip a sj:EvidenceRequirement ;
+    rdfs:label "assemble, verify, mine round trip" ;
+    dcterms:description "A receipt assembled from events verifies accepted, and mining over events produces a process model. Anchored by test/ash_affidavit_op_replay_test.exs and test/ash_affidavit_ash_test.exs." .
+
+# ── Goal area 5: tamper detection ────────────────────────────────────────────
+
+prd:goal-tamper-detection a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G5" ;
+    rdfs:label "Tampered input is refused, not accepted" ;
+    dcterms:description "Verify refuses a receipt whose commitment or payload has been altered (digest-mismatch refusal), so a receipt cannot be edited after the fact and re-verified." ;
+    sj:pathScope "lib/ash_affidavit.ex lib/ash_affidavit/refusal.ex" ;
+    sj:requirement prd:req-digest-mismatch ;
+    dcterms:source "README.md#use" .
+
+prd:req-digest-mismatch a sj:EvidenceRequirement ;
+    rdfs:label "Digest mismatch refuses" ;
+    dcterms:description "A verify call over an altered receipt returns {:refused, _} with a digest-mismatch-class code. Anchored by test/ash_affidavit_op_replay_test.exs and test/ash_affidavit_refusal_test.exs." .
+
+# ── Goal area 6: Ash / Reactor / Igniter integration surface ─────────────────
+
+prd:goal-ash-integration a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G6" ;
+    rdfs:label "Ash extension, Reactor step and Igniter installer" ;
+    dcterms:description "The AshAffidavit.Resource Spark extension provides an affidavit section (runtime entity: wasm_path, timeout_ms, trusted_keys, server, singleton; operation entities) with legality checks in AshAffidavit.Resource.Validate (unknown op, bad ceiling, non-positive timeout, malformed trusted key, singleton false without server). The engine response is stored at changeset.context[:affidavit]. Shipped: AshAffidavit.Change.Receipt, AshAffidavit.Validation.Verified, AshAffidavit.Calculation.Verdict, AshAffidavit.Type.Receipt, AshAffidavit.Type.ChainHash, AshAffidavit.Notifier, AshAffidavit.Error.Refused, AshAffidavit.Formatter. AshAffidavit.Reactor.Step runs one op as a Reactor step and exists only when Reactor is loadable. mix ash_affidavit.install [--target M] is idempotent: a second run changes nothing." ;
+    sj:pathScope "lib/ash_affidavit/resource.ex lib/ash_affidavit/resource lib/ash_affidavit/reactor/step.ex lib/ash_affidavit/error lib/mix/tasks/ash_affidavit.install.ex" ;
+    sj:requirement prd:req-dsl-legality,
+                   prd:req-composition,
+                   prd:req-installer-idempotent ;
+    dcterms:source "CHANGELOG.md v26.9.30 HANDWRITTEN.md" .
+
+prd:req-dsl-legality a sj:EvidenceRequirement ;
+    rdfs:label "Declared affidavit sections are legal or refused" ;
+    dcterms:description "Illegal declarations (unknown op, ceiling above NONE, non-positive timeout, malformed trusted key, singleton false without server) fail verification; legal declarations normalize to runtime/1 and operations/1. Anchored by test/ash_affidavit_dsl_test.exs." .
+
+prd:req-composition a sj:EvidenceRequirement ;
+    rdfs:label "Change, validation, calculation, type and notifier compose" ;
+    dcterms:description "The extension's change/validation/calculation/type/notifier surface composes over a real fixture resource. Anchored by test/ash_affidavit_ash_test.exs and test/ash_affidavit_composition_test.exs." .
+
+prd:req-installer-idempotent a sj:EvidenceRequirement ;
+    rdfs:label "Installer is idempotent" ;
+    dcterms:description "A second run of mix ash_affidavit.install produces no diff, with and without --target and with and without Igniter. Anchored by test/ash_affidavit_install_test.exs." .
+
+# ── Goal area 7: generated provenance ────────────────────────────────────────
+
+prd:goal-generated-provenance a sj:GoalCheckpoint ;
+    dcterms:identifier "PRD-AA-G7" ;
+    rdfs:label "Two pack projections from RDF with a ledgered hand-written residue" ;
+    dcterms:description "Host files (abi, wasm_config, engine_load, host, pool, vendor/verify tasks, MANIFEST.json) are generated from ontology/affidavit-binding.ttl and ontology/affidavit-contract.ttl by the qri-consumer-binding-pack (scripts/consume.sh, pinned in consumer-pack.pin, which refuses a pack export whose fingerprint differs from pack_fingerprint). Extension files (resource, persist, verify, info, mix ash_affidavit.install) are generated from ontology/affidavit-extension.ttl by the ash-extension-pack 0.3.0 (scripts/render_extension.sh, --check proves two byte-identical renders equal to the tree). Every hand-written file carries UNSUPPORTED(generator-capability) and is listed in HANDWRITTEN.md; a module has exactly one authority, never both, checked by test/ash_affidavit_extension_render_test.exs." ;
+    sj:pathScope "ontology consumer-pack.pin scripts/generate.sh scripts/consume.sh scripts/render_extension.sh HANDWRITTEN.md" ;
+    sj:requirement prd:req-parity,
+                   prd:req-single-authority,
+                   prd:req-external-evidence ;
+    dcterms:source "README.md#provenance-of-the-code HANDWRITTEN.md" .
+
+prd:req-parity a sj:EvidenceRequirement ;
+    rdfs:label "Regeneration equals the tree" ;
+    dcterms:description "Regenerating the host and extension files reproduces the committed files byte-identically against consumer-pack.pin digests (live via ASH_AFFIDAVIT_PACK_ROOT), and authority NONE holds over all nine ops. Anchored by test/ash_affidavit_consumer_parity_test.exs." .
+
+prd:req-single-authority a sj:EvidenceRequirement ;
+    rdfs:label "No module is both generated and hand-written" ;
+    dcterms:description "Every lib module resolves to exactly one provenance. Anchored by test/ash_affidavit_extension_render_test.exs." .
+
+prd:req-external-evidence a sj:EvidenceRequirement ;
+    rdfs:label "External evidence certification surface" ;
+    dcterms:description "The engine's certify_authzen_evidence and certify_spiffe_evidence ops and verify_signature_input are reachable through the package surface. Anchored by test/ash_affidavit_external_evidence_test.exs." .
+
+# ── Falsifiers ───────────────────────────────────────────────────────────────
+
+prd:falsifier-authority-escalation-observed a sj:Falsifier ;
+    rdfs:label "A response with authority above NONE is returned as ok" ;
+    dcterms:description "If any engine op returns a response whose authority (top level or inside evidence) is above NONE and call/2 yields {:ok, _} instead of {:refused, :authority_escalation}, goal PRD-AA-G3 is falsified. Detected by test/ash_affidavit_authority_none_test.exs and test/ash_affidavit_ash_authority_test.exs." .
+
+prd:falsifier-digest-pin-bypass a sj:Falsifier ;
+    rdfs:label "A modified engine compiles and runs" ;
+    dcterms:description "If a vendored affidavit.wasm with a wrong SHA-256 is compiled, instantiated, or served to call/2 without a refusal, goal PRD-AA-G1 is falsified. Detected by test/ash_affidavit_pinned_wasm_test.exs and test/ash_affidavit_pin_resolution_courts_test.exs." .
+
+prd:falsifier-replay-divergence a sj:Falsifier ;
+    rdfs:label "The same op call yields different output" ;
+    dcterms:description "If repeating an operation with identical input produces a different response, or an assembled receipt fails verify, goal PRD-AA-G4 is falsified. Detected by test/ash_affidavit_op_replay_test.exs." .
+
+prd:falsifier-outcome-collapse a sj:Falsifier ;
+    rdfs:label "Refused, trap or unsupported collapses into ok" ;
+    dcterms:description "If bad input, a runtime trap, or an unknown op returns {:ok, _} instead of the corresponding typed outcome, goal PRD-AA-G2 is falsified. Detected by test/ash_affidavit_refusal_test.exs and test/ash_affidavit_limits_test.exs." .
+
+prd:falsifier-hand-edit-generated a sj:Falsifier ;
+    rdfs:label "A generated file diverges from its pack output" ;
+    dcterms:description "If regenerating host or extension files from the pinned ontologies produces bytes that differ from the tree, or a module carries both generated and hand-written authority, goal PRD-AA-G7 is falsified. Detected by test/ash_affidavit_consumer_parity_test.exs and test/ash_affidavit_extension_render_test.exs." .
+
+# ── Honest limitations (observed, not aspirational) ─────────────────────────
+
+prd:limitation-suite-breadth a sj:AcceptanceCriterion ;
+    rdfs:label "Thin suite breadth" ;
+    dcterms:description "The suite is 100 tests plus 11 doctests (5 excluded) on one Elixir/OTP/wasmex toolchain. There is no property-based corpus over the engine ops, no soak or concurrency-count sweep beyond the pool limit tests, and no cross-runtime (non-wasmex host) verification. Suite breadth is narrower than the capability list." .
+
+prd:limitation-no-canonical-case-study a sj:AcceptanceCriterion ;
+    rdfs:label "No canonical case-study narrative in this repository" ;
+    dcterms:description "This repository ships no canonical end-to-end case-study narrative of its own; usage evidence is README examples, op-examples.json, and cross-repo consumers (for example the xaas v26.10.1 Chicago goal graph names an affidavit evidence/standing layer). The PRD claims the tested behaviors above, not a validated production narrative." .
+
+prd:limitation-pack-projection-gaps a sj:AcceptanceCriterion ;
+    rdfs:label "Recorded generator gaps and absent capabilities" ;
+    dcterms:description "HANDWRITTEN.md records observed pack limits (no per-entity describe, no DSL path in the verifier message, unformatted pack output requiring two mix format passes, qri:errorCollapse and host refusal code tables not consumed by templates, no deps fragment). Capabilities that are absent, not stubbed: mix ash_affidavit.upgrade, a domain-level extension, a Reactor DSL entity." .
+
+prd:limitation-no-authority a sj:AcceptanceCriterion ;
+    rdfs:label "This document grants no authority" ;
+    dcterms:description "This PRD is a description of requirements and observed verification. Standing for any subject remains UNKNOWN until an independent exact-subject court produces a receipt; reading or rendering this graph executes nothing and admits nothing." .
+
+# ── Capability individuals (provider-neutral naming; grants no authority) ────
+
+prd:cap-affidavit-engine a sj:Capability ; sj:capabilityId "affidavit:receipt-engine" .
+prd:cap-affidavit-host a sj:Capability ; sj:capabilityId "ash_affidavit:wasmex-host" .
+prd:cap-affidavit-ash a sj:Capability ; sj:capabilityId "ash_affidavit:ash-extension" .
+prd:cap-affidavit-provenance a sj:Capability ; sj:capabilityId "ash_affidavit:pack-projection" .
+
+prd:PRD-ASH-AFFIDAVIT-v26.10.1 sj:requiresCapability
+    prd:cap-affidavit-engine,
+    prd:cap-affidavit-host,
+    prd:cap-affidavit-ash,
+    prd:cap-affidavit-provenance .
