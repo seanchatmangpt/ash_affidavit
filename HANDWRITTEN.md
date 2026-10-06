@@ -55,6 +55,13 @@ Observed limits of the projection, kept as recorded divergences:
 | `lib/ash_affidavit/type/receipt.ex`, `lib/ash_affidavit/type/chain_hash.ex` | no pack template emits Ash types |
 | `lib/ash_affidavit/error/refused.ex` | no pack template emits a Splode error; it wraps `AshAffidavit.Refusal`, which stays unchanged because the generated host aliases it |
 | `lib/ash_affidavit/reactor/step.ex` | the pack's `reactor_step.ex.tmpl` emits an arguments-echo stub, not a step that calls the engine, and `aex:workflowReactor` is false; the generic step is guarded by `Code.ensure_loaded?(Reactor.Step)`. Not built: a Reactor DSL entity (`affidavit_op`), a telemetry middleware, a generated pipeline |
+| `lib/ash_affidavit/signing.ex` | no pack template emits a signature-envelope surface over the engine's
+`verify_signature_input` op (host gates on the 12-field `CTP-ENVELOPE-v1` closure, caller-attested subject
+binding, pre-image binding through the real wasm call; AG2 lane). The pinned wasm ABI has no cryptographic
+signature-verify op and no subject-digest derivation op — `verified_pre_image` is an engine witness,
+`subject_binding` a host witness, never a signature verdict |
+| `lib/ash_affidavit/signing/keys.ex` | no pack template emits a key/JWKS loading surface; structural
+normalization and closed algorithm-set routing only (the wasm ABI consumes no key material) |
 | `test/support/affidavit_resource.ex` | test fixture resource and domain; no pack template emits Ash fixtures |
 | `.formatter.exs`, `.credo.exs`, `mix.exs` | repo configuration; no pack emits project config or the Spark formatter export list; `mix.exs` also holds the hand-declared deps (see gaps) |
 | `scripts/consume.sh`, `scripts/render_extension.sh`, `scripts/pack_fingerprint.py`, `ggen.toml` | consumer-side drivers; no pack emits them |
