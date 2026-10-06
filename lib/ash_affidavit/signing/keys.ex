@@ -18,6 +18,13 @@ defmodule AshAffidavit.Signing.Keys do
   same families: `ED25519`/`Ed25519`, `ES256`, `ES256K`, `ML_DSA65`, `SLH_DSA_SHA2_128s`, and the
   hybrid `HYBRID_ES256_ML_DSA65`. A key naming an algorithm outside the set is kept in the set but
   refused by `select/2`; a JWKS whose `keys` member is missing or ill-formed is a typed refusal.
+
+  Each admitted key is also structurally validated against its algorithm's public-key shape law:
+  Ed25519 `x` must decode (unpadded base64url) to 32 bytes; ES256/ES256K carry either JWK `x`+`y`
+  (32 bytes each) or a SEC1 point in `sec1` (ES256: 65 bytes, 0x04 prefix; ES256K: 33 bytes,
+  0x02/0x03 prefix — never both forms). The PQ/hybrid families are LENGTH-DYNAMIC pending the AG1
+  envelope field set (TODO in the source). Material members must be unpadded base64url;
+  padding or non-base64url bytes are an `:invalid_encoding` refusal.
   """
 
   alias AshAffidavit.Refusal
@@ -44,8 +51,10 @@ defmodule AshAffidavit.Signing.Keys do
 
   def from_jwks(%{"keys" => keys}, _opts) when is_list(keys) do
     Enum.reduce_while(keys, {:ok, []}, fn key, {:ok, acc} ->
-      case normalize_key(key) do
-        {:ok, normalized} -> {:cont, {:ok, [normalized | acc]}}
+      with {:ok, normalized} <- normalize_key(key),
+           :ok <- validate_structure(normalized) do
+        {:cont, {:ok, [normalized | acc]}}
+      else
         {:error, refusal} -> {:halt, {:error, refusal}}
       end
     end)
@@ -96,7 +105,7 @@ defmodule AshAffidavit.Signing.Keys do
   defp normalize_key(%{"kid" => kid, "kty" => kty, "alg" => alg} = key)
        when is_binary(kid) and is_binary(kty) and is_binary(alg) do
     if kty in @key_types do
-      {:ok, Map.take(key, ~w(kid kty alg crv x y n e k))}
+      {:ok, Map.take(key, ~w(kid kty alg crv x y sec1 n e k))}
     else
       {:error,
        Refusal.new(:bad_field, "JWKS key `kty` #{inspect(kty)} is outside the supported set", %{kid: kid, kty: kty})}
@@ -112,4 +121,101 @@ defmodule AshAffidavit.Signing.Keys do
 
   defp normalize_key(key),
     do: {:error, Refusal.new(:bad_field, "JWKS key must be an object", %{value: inspect(key, limit: 3)})}
+
+  # -- per-algorithm structural validation -----------------------------------------------------
+  #
+  # The pinned wasm consumes no key material, so this is structural hardening only: every
+  # length/prefix law below is the algorithm's public-key shape law, checked before any key is
+  # routed to a consumer. Bignum families (ML_DSA65, SLH_DSA_SHA2_128s, HYBRID_ES256_ML_DSA65)
+  # are LENGTH-DYNAMIC here: their laws come from the AG1 CertifiedReceiptEnvelope field set,
+  # which is not discoverable in this tree at this SHA (no rendered envelope schema in lib/ or
+  # docs/). TODO(AG1): pin their byte lengths when the envelope field set lands and enforce
+  # them exactly like the classical families.
+
+  @dialyzer {:nowarn_function, validate_structure: 1}
+
+  @doc false
+  @spec validate_structure(map()) :: :ok | {:error, Refusal.t()}
+  def validate_structure(%{"alg" => alg} = key) do
+    cond do
+      alg in ~w(ED25519 Ed25519) -> validate_ed25519(key)
+      alg == "ES256" -> validate_ec(key, 32, compressed?: false)
+      alg == "ES256K" -> validate_ec(key, 32, compressed?: true)
+      alg in ~w(ML_DSA65 SLH_DSA_SHA2_128s HYBRID_ES256_ML_DSA65) -> :ok
+      true -> :ok
+    end
+  end
+
+  # OKP: `x` is the raw 32-byte public key, 43 chars of unpadded base64url.
+  defp validate_ed25519(%{"x" => x} = key) when is_binary(x) do
+    with {:ok, raw} <- b64url(x, key, "x") do
+      if byte_size(raw) == 32 do
+        :ok
+      else
+        {:error,
+         Refusal.new(:bad_field, "Ed25519 key `x` must decode to 32 bytes, got #{byte_size(raw)}", key_details(key))}
+      end
+    end
+  end
+
+  defp validate_ed25519(key),
+    do: {:error, Refusal.new(:missing_field, "Ed25519 (OKP) key is missing the `x` member", key_details(key))}
+
+  # EC families: JWK form is `x`+`y` (32 bytes each, P-256/secp256k1 coordinate size); raw form
+  # is a SEC1 point in `sec1` — uncompressed 0x04||X||Y (65 bytes) for ES256, compressed
+  # 0x02/0x03||X (33 bytes) for ES256K. A key carrying neither is refused; one carrying both
+  # is refused (two sources of truth).
+  defp validate_ec(%{"sec1" => sec1} = key, _xy_size, compressed?: compressed?) when is_binary(sec1) do
+    if match?(%{"x" => _, "y" => _}, key) do
+      {:error, Refusal.new(:bad_field, "EC key carries both `sec1` and JWK `x`/`y`", key_details(key))}
+    else
+      check_sec1(sec1, compressed?)
+    end
+  end
+
+  defp validate_ec(%{"x" => x, "y" => y} = key, xy_size, _compressed?) when is_binary(x) and is_binary(y) do
+    with {:ok, x_raw} <- b64url(x, key, "x"),
+         {:ok, y_raw} <- b64url(y, key, "y") do
+      if byte_size(x_raw) == xy_size and byte_size(y_raw) == xy_size do
+        :ok
+      else
+        {:error, Refusal.new(:bad_field, "EC key `x`/`y` must decode to #{xy_size} bytes each", key_details(key))}
+      end
+    end
+  end
+
+  defp validate_ec(key, _xy, _compressed?),
+    do: {:error, Refusal.new(:missing_field, "EC key carries neither `sec1` nor JWK `x`/`y`", key_details(key))}
+
+  defp check_sec1(sec1, true) do
+    if byte_size(sec1) == 33 and binary_part(sec1, 0, 1) in [<<0x02>>, <<0x03>>] do
+      :ok
+    else
+      {:error, Refusal.new(:bad_field, "ES256K `sec1` must be 33 bytes prefixed 0x02 or 0x03", %{})}
+    end
+  end
+
+  defp check_sec1(sec1, false) do
+    if byte_size(sec1) == 65 and binary_part(sec1, 0, 1) == <<0x04>> do
+      :ok
+    else
+      {:error, Refusal.new(:bad_field, "ES256 `sec1` must be 65 bytes with the 0x04 uncompressed prefix", %{})}
+    end
+  end
+
+  defp b64url(value, key, member) do
+    cond do
+      String.contains?(value, ["=", "+", "/"]) ->
+        {:error,
+         Refusal.new(:invalid_encoding, "#{member} must be unpadded base64url", Map.put(key_details(key), member, value))}
+
+      true ->
+        case Base.url_decode64(value, padding: false) do
+          {:ok, raw} -> {:ok, raw}
+          :error -> {:error, Refusal.new(:invalid_encoding, "#{member} is not valid base64url", key_details(key))}
+        end
+    end
+  end
+
+  defp key_details(key), do: Map.take(key, ~w(kid kty alg crv))
 end

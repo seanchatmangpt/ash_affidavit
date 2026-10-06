@@ -229,4 +229,81 @@ defmodule AshAffidavit.SigningCourtsTest do
     assert {:error, %Refusal{code: :bad_field}} =
              Keys.from_jwks(%{"keys" => [%{"kid" => "k", "kty" => "RSA", "alg" => "RS256"}]})
   end
+
+  # ---- court 7: structural key validation admits well-formed material per algorithm ----------
+
+  @ed25519_x "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA"
+  @ec_xy "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA"
+
+  @tag :signing
+  test "structurally valid keys pass validation for every classical family" do
+    ed = %{"kid" => "k_ed", "kty" => "OKP", "alg" => "ED25519", "x" => @ed25519_x}
+    es256_jwk = %{"kid" => "k_es", "kty" => "EC", "alg" => "ES256", "crv" => "P-256", "x" => @ec_xy, "y" => @ec_xy}
+
+    es256_sec1 = %{
+      "kid" => "k_es_sec1",
+      "kty" => "EC",
+      "alg" => "ES256",
+      "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64)
+    }
+
+    es256k_sec1 = %{"kid" => "k_k_sec1", "kty" => "EC", "alg" => "ES256K", "sec1" => <<0x03>> <> :binary.copy(<<1>>, 32)}
+
+    es256k_jwk = %{"kid" => "k_k_jwk", "kty" => "EC", "alg" => "ES256K", "x" => @ec_xy, "y" => @ec_xy}
+
+    # LENGTH-DYNAMIC (TODO AG1): PQ/hybrid families have no pinned length law in this tree yet.
+    pq = %{"kid" => "k_pq", "kty" => "OKP", "alg" => "ML_DSA65"}
+
+    assert {:ok, keys} = Keys.from_jwks(%{"keys" => [ed, es256_jwk, es256_sec1, es256k_sec1, es256k_jwk, pq]})
+    assert length(keys) == 6
+  end
+
+  @tag :signing
+  test "wrong-length, truncated, wrong-prefix and duplicate-source material refuse typed" do
+    short_ed = %{"kid" => "bad_ed", "kty" => "OKP", "alg" => "ED25519", "x" => "AQIDBAUGBwgJCgsMDQ4PEA"}
+
+    assert {:error, %Refusal{code: :bad_field, message: m}} = Keys.from_jwks(%{"keys" => [short_ed]})
+    assert m =~ "32 bytes"
+
+    assert {:error, %Refusal{code: :missing_field}} =
+             Keys.from_jwks(%{"keys" => [%{"kid" => "no_x", "kty" => "OKP", "alg" => "ED25519"}]})
+
+    short_xy = %{"kid" => "bad_xy", "kty" => "EC", "alg" => "ES256", "x" => @ec_xy, "y" => "AQIDBAUGBwgJCgsMDQ4PEA"}
+
+    assert {:error, %Refusal{code: :bad_field, message: m2}} = Keys.from_jwks(%{"keys" => [short_xy]})
+    assert m2 =~ "32 bytes each"
+
+    wrong_prefix = %{"kid" => "bad_sec1", "kty" => "EC", "alg" => "ES256", "sec1" => <<0x03>> <> :binary.copy(<<1>>, 64)}
+
+    assert {:error, %Refusal{code: :bad_field, message: m3}} = Keys.from_jwks(%{"keys" => [wrong_prefix]})
+    assert m3 =~ "0x04"
+
+    wrong_prefix_k = %{"kid" => "bad_sec1k", "kty" => "EC", "alg" => "ES256K", "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64)}
+
+    assert {:error, %Refusal{code: :bad_field, message: m4}} = Keys.from_jwks(%{"keys" => [wrong_prefix_k]})
+    assert m4 =~ "0x02 or 0x03"
+
+    both = %{"kid" => "both", "kty" => "EC", "alg" => "ES256", "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64), "x" => @ec_xy, "y" => @ec_xy}
+
+    assert {:error, %Refusal{code: :bad_field, message: m5}} = Keys.from_jwks(%{"keys" => [both]})
+    assert m5 =~ "both"
+  end
+
+  @tag :signing
+  test "base64url padding and non-base64url material refuse with :invalid_encoding" do
+    padded = %{"kid" => "padded", "kty" => "OKP", "alg" => "ED25519", "x" => @ed25519_x <> "="}
+
+    assert {:error, %Refusal{code: :invalid_encoding, message: m}} = Keys.from_jwks(%{"keys" => [padded]})
+    assert m =~ "unpadded base64url"
+
+    std_b64 = %{
+      "kid" => "std",
+      "kty" => "EC",
+      "alg" => "ES256",
+      "x" => "AQ+D",
+      "y" => @ec_xy
+    }
+
+    assert {:error, %Refusal{code: :invalid_encoding}} = Keys.from_jwks(%{"keys" => [std_b64]})
+  end
 end
