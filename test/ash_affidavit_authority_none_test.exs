@@ -19,8 +19,8 @@ defmodule AshAffidavit.AuthorityNoneTest do
   defp walk(list, acc) when is_list(list), do: Enum.reduce(list, acc, &walk/2)
   defp walk(_, acc), do: acc
 
-  test "the examples cover all 9 ops" do
-    assert length(@examples["examples"]) == 9
+  test "the examples cover all 14 ops" do
+    assert length(@examples["examples"]) == 14
     assert Enum.sort(Enum.map(@examples["examples"], & &1["op"])) == Enum.sort(AshAffidavit.ops())
   end
 

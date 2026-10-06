@@ -92,7 +92,7 @@ Splode error (class `:invalid`) wrapping a refusal, with `code/1` and
   `config :ash_affidavit, :wasm_path` → vendored file
   (`AshAffidavit.WasmConfig.wasm_path/1`, `vendored_path/0`).
 - Digest pin from `MANIFEST.json` (`sha256`
-  `5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7`); the
+  `5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402`); the
   import surface must be exactly `environ_get`, `environ_sizes_get`,
   `fd_write`, `proc_exit` from `wasi_snapshot_preview1`; required exports
   `af_alloc`, `af_call`, `af_free`, `af_abi_version`, `memory`. Requests are

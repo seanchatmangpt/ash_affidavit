@@ -14,7 +14,7 @@ defmodule AshAffidavit.PinResolutionCourtsTest do
   alias AshAffidavit.WasmConfig
 
   @wasm Path.expand("../priv/affidavit/affidavit.wasm", __DIR__)
-  @pin "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
+  @pin "5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402"
 
   # ---- court 1: pin resolution and limits precedence (fail-closed) -------------------------
 

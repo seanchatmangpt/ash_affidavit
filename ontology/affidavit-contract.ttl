@@ -20,8 +20,8 @@
 ab:capability a qri:Capability .
 
 ab:contract a qri:CapabilityContract ;
-    qri:contractDigest "60dc0100b5d3a56131cdf2b9b8ebce83c024b3930963d95e7c888880c060c1e6" ;
-    qcb:registrySha256 "ebac457843cd2322af575f02583a4a2a2a11a2488de6ee0eabef468861ebe61b" ;
+    qri:contractDigest "f156c190c6c6dca0be78c88ca3cb9f7fe01fca2bf31d0523477978abd656ccd8" ;
+    qcb:registrySha256 "2fcaae611aaf069317123c0e1fe0c2978b2bd9c72aeadf2888aaee8be34d2ee5" ;
     qri:specifiesCapability ab:capability ;
     qri:contractVersion "1.0.0" ;
     qri:abiSymbolPrefix "af" ;
@@ -33,10 +33,11 @@ ab:contract a qri:CapabilityContract ;
     qri:allowedImport "wasi_snapshot_preview1::environ_get" ,
                       "wasi_snapshot_preview1::environ_sizes_get" ,
                       "wasi_snapshot_preview1::fd_write" ,
-                      "wasi_snapshot_preview1::proc_exit" ;
+                      "wasi_snapshot_preview1::proc_exit" ,
+                      "wasi_snapshot_preview1::random_get" ;
     qri:requiredExport "af_alloc" , "af_call" , "af_free" , "af_abi_version" , "memory" ;
     qri:optionalExport "_initialize" ;
-    qri:wasiImport ab:impEnvironGet , ab:impEnvironSizesGet , ab:impFdWrite , ab:impProcExit ;
+    qri:wasiImport ab:impEnvironGet , ab:impEnvironSizesGet , ab:impFdWrite , ab:impProcExit , ab:impRandomGet ;
     qri:operation ab:opCall .
 
 ab:opCall a qri:Operation ; qri:opName "call" ; qri:input ab:inRequest ; qri:output ab:outResponse .
@@ -58,6 +59,7 @@ ab:rTooLarge a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:
 ab:rTooDeep a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "too_deep" .
 ab:rMissingBuffer a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "missing_buffer" .
 ab:rInternal a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "internal" .
+ab:rMalformed a qri:RefusalCode , skos:Concept ; skos:inScheme ab:refusals ; qri:refusalCode "malformed" .
 
 ab:host a qri:HostProfile ;
     qri:freeSymbol "af_free" ; qri:freeArity 2 ; qri:lenType "u32" ;
@@ -100,3 +102,4 @@ ab:impEnvironGet a qri:WasiImport ; qri:importName "environ_get" ; qri:importPar
 ab:impEnvironSizesGet a qri:WasiImport ; qri:importName "environ_sizes_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .
 ab:impFdWrite a qri:WasiImport ; qri:importName "fd_write" ; qri:importParams "i32,i32,i32,i32" ; qri:importResults "i32" .
 ab:impProcExit a qri:WasiImport ; qri:importName "proc_exit" ; qri:importParams "i32" ; qri:importResults "" .
+ab:impRandomGet a qri:WasiImport ; qri:importName "random_get" ; qri:importParams "i32,i32" ; qri:importResults "i32" .

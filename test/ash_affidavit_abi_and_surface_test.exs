@@ -120,7 +120,7 @@ defmodule AshAffidavit.AbiAndSurfaceTest do
     assert out =~ "Affidavit engine VERIFIED (abi_version 1)"
 
     out = capture_io(fn -> Vendor.run(["--check"]) end)
-    assert out =~ "affidavit.wasm OK sha256=5e721cc2"
+    assert out =~ "affidavit.wasm OK sha256=5cc37aea"
   end
 
   test "the contract's typed imports equal the manifest's imports and the real module's imports" do
@@ -147,7 +147,7 @@ defmodule AshAffidavit.AbiAndSurfaceTest do
       end
       |> Enum.sort()
 
-    assert length(contract_imports) == 4
+    assert length(contract_imports) == 5
     assert contract_imports == manifest_imports
     assert contract_imports == module_imports
 

@@ -12,8 +12,8 @@ defmodule AshAffidavit.PinnedWasmTest do
   @wasm Path.expand("../priv/affidavit/affidavit.wasm", __DIR__)
   @manifest Path.expand("../priv/affidavit/MANIFEST.json", __DIR__)
   # Independent copy of the pin published by the engine repo (registry/ARTIFACTS.sha256).
-  @engine_pin "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
-  @engine_size 284_650
+  @engine_pin "5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402"
+  @engine_size 660_847
 
   defp sha256(bytes), do: :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
 
@@ -34,7 +34,7 @@ defmodule AshAffidavit.PinnedWasmTest do
     assert Map.keys(admitted.imports) == ["wasi_snapshot_preview1"]
 
     assert admitted.imports["wasi_snapshot_preview1"] |> Map.keys() |> Enum.sort() ==
-             ~w(environ_get environ_sizes_get fd_write proc_exit)
+             ~w(environ_get environ_sizes_get fd_write proc_exit random_get)
 
     for export <- EngineLoad.required_exports(), do: assert(Map.has_key?(admitted.exports, export))
     assert "af_abi_version" in EngineLoad.required_exports()

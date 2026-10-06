@@ -38,7 +38,7 @@ defmodule AshAffidavit.Refusal do
                 |> Jason.decode!()
                 |> Map.fetch!("error_codes")
 
-  @engine_input ~w(bad_json missing_field bad_field)
+  @engine_input ~w(bad_json missing_field bad_field malformed)
   @engine_resource ~w(too_large too_deep missing_buffer)
   @engine_trap ~w(internal)
   @engine_unsupported ~w(unknown_op)
