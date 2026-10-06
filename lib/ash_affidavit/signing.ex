@@ -47,6 +47,11 @@ defmodule AshAffidavit.Signing do
       `missing_field`/`bad_field` refusal, not a host one.
     * `:expected_subject_digest` — 32 raw bytes (or 64 hex chars) the caller attests the envelope
       binds; compared byte-wise with the envelope's `subject_digest` before the engine call.
+    * `:domain_tag` — names the derivation law for the subject binding. When present (and no
+      `:expected_subject_digest` is supplied), the expected digest is computed by the engine's
+      `derive_subject_digest` op over `subject` under this tag, and the envelope must bind it —
+      an engine-derived binding instead of a caller-attested one. Defaults to no derivation
+      (binding `:unchecked`).
     * `:server`, `:timeout_ms` — forwarded to `AshAffidavit.call/2`.
   """
 
@@ -110,7 +115,7 @@ defmodule AshAffidavit.Signing do
   def verify_certified_receipt(envelope, payload_hash, subject, opts \\ []) do
     with {:ok, projected} <- gate_envelope(envelope),
          :ok <- gate_context(payload_hash, subject),
-         :ok <- gate_subject_binding(envelope, opts) do
+         {:ok, binding} <- gate_subject_binding(envelope, subject, opts) do
       request = %{
         "op" => "verify_signature_input",
         "envelope_json" => Jason.encode!(projected),
@@ -119,12 +124,7 @@ defmodule AshAffidavit.Signing do
 
       case AshAffidavit.call(request, Keyword.take(opts, [:server, :timeout_ms])) do
         {:ok, %{"verified" => verified, "signing_input_hex" => pre_image}} ->
-          {:ok,
-           %{
-             verified_pre_image: verified,
-             signing_input_hex: pre_image,
-             subject_binding: if(opts[:expected_subject_digest], do: :verified, else: :unchecked)
-           }}
+          {:ok, Map.merge(%{verified_pre_image: verified, signing_input_hex: pre_image}, binding_source(binding))}
 
         # The engine's own error envelope; classify exactly as AshAffidavit.call does.
         # A `malformed` code (the engine's refusal for a broken envelope document) is not in the
@@ -222,10 +222,20 @@ defmodule AshAffidavit.Signing do
     end
   end
 
-  defp gate_subject_binding(envelope, opts) do
+  defp gate_subject_binding(envelope, subject, opts) do
     case Keyword.fetch(opts, :expected_subject_digest) do
       :error ->
-        :ok
+        # No caller-attested digest: where the caller names the derivation law (a domain tag),
+        # the binding is derived through the engine instead of attested by the caller. This is
+        # the AG2r ABI-gap closure — the envelope's subject_digest is checked against an
+        # engine-computed digest, not an equality the caller asserts.
+        case Keyword.fetch(opts, :domain_tag) do
+          :error ->
+            {:ok, {:unchecked, :unchecked}}
+
+          {:ok, domain_tag} ->
+            engine_derive_binding(envelope, subject, domain_tag, opts)
+        end
 
       {:ok, expected} ->
         expected_bytes = normalize_digest(expected)
@@ -236,7 +246,7 @@ defmodule AshAffidavit.Signing do
             {:refused, Refusal.new(:bad_field, "expected_subject_digest must be 32 raw bytes or 64 hex chars")}
 
           subject_digest == expected_bytes ->
-            :ok
+            {:ok, {:verified, :caller_attested}}
 
           true ->
             {:refused,
@@ -247,6 +257,31 @@ defmodule AshAffidavit.Signing do
         end
     end
   end
+
+  # Engine-derived subject binding: digest `subject` under `domain_tag` through the engine's
+  # `derive_subject_digest` op and require the envelope to bind exactly those bytes.
+  defp engine_derive_binding(envelope, subject, domain_tag, opts) do
+    case derive_subject_digest(domain_tag, subject, Keyword.take(opts, [:server, :timeout_ms])) do
+      {:ok, %{digest: digest}} ->
+        subject_digest = normalize_digest(envelope["subject_digest"])
+
+        if subject_digest == {:ok, digest} do
+          {:ok, {:verified, :engine_derived}}
+        else
+          {:refused,
+           Refusal.new(:bad_field, "envelope subject_digest does not bind the engine-derived digest of subject", %{
+             domain_tag: domain_tag,
+             expected: Base.encode16(digest, case: :lower),
+             envelope: inspect(envelope["subject_digest"], limit: 40)
+           })}
+        end
+
+      {outcome, refusal} ->
+        {outcome, refusal}
+    end
+  end
+
+  defp binding_source({binding, source}), do: %{subject_binding: binding, subject_binding_source: source}
 
   defp normalize_digest(value) when is_binary(value) and byte_size(value) == 32, do: {:ok, value}
 
@@ -271,6 +306,175 @@ defmodule AshAffidavit.Signing do
   end
 
   defp byte_list(_, _), do: :error
+
+  # ---- engine-derived subject binding (ABI-gap closure, AG2r #2) -----------------------------
+
+  @envelope_domain_tag "affidavit.crypto-trust-plane.v1"
+
+  @doc """
+  Derives a domain-separated subject digest through the engine's `derive_subject_digest` op.
+
+  `domain_tag` must be a nonempty binary; `subject` is arbitrary bytes (or a hex string, which is
+  passed through as raw bytes). The engine hashes `tag || 0x00 || tag || 0x00 || u64_be(len) ||
+  subject` with BLAKE3 and returns both the digest and the exact pre-image, so the host can audit
+  the domain separation without re-deriving the law. This closes the ABI gap the module doc names:
+  the subject/payload-to-envelope binding becomes engine-derived, not caller-attested.
+
+      {:ok, %{digest_hex: String.t(), pre_image_hex: String.t(), digest: binary()}}
+      | {:refused | :trap | :unsupported, %AshAffidavit.Refusal{}}
+
+  Reads `:server`/`:timeout_ms` options.
+  """
+  @spec derive_subject_digest(binary(), binary(), keyword()) ::
+          {:ok, map()} | {:refused, Refusal.t()} | {:trap, Refusal.t()} | {:unsupported, Refusal.t()}
+  def derive_subject_digest(domain_tag, subject, opts \\ []) when is_binary(domain_tag) and is_binary(subject) do
+    cond do
+      domain_tag == "" ->
+        {:refused, Refusal.new(:bad_field, "domain_tag must not be empty")}
+
+      true ->
+        request = %{
+          "op" => "derive_subject_digest",
+          "domain_tag" => domain_tag,
+          "subject_hex" => Base.encode16(subject, case: :lower)
+        }
+
+        case AshAffidavit.call(request, Keyword.take(opts, [:server, :timeout_ms])) do
+          {:ok, %{"digest_hex" => digest_hex, "pre_image_hex" => pre_image_hex}} ->
+            with {:ok, digest} <- Base.decode16(digest_hex, case: :lower) do
+              {:ok, %{digest_hex: digest_hex, pre_image_hex: pre_image_hex, digest: digest}}
+            end
+
+          other ->
+            other
+        end
+    end
+  end
+
+  @doc """
+  Adjudicates one signature through the engine's `verify_signature` op, routed by algorithm.
+
+  `key_source` is either an envelope document (its `"version"` is `#{@envelope_version}`; the
+  algorithm comes from its `"algorithm"` field) or a key-material map (`"alg"`/`"algorithm"` plus
+  `"public_key_hex"` or raw `"public_key"`). An envelope carries no key, so one must arrive as the
+  `:public_key_hex`/`:public_key` option. `signature` and `signing_input` are raw bytes or hex
+  strings. The engine answers per-alg (ES256 DER low-s, ES256K fixed 64-byte low-s over a
+  compressed SEC1 key, Ed25519 strict) and never claims more than it checked.
+
+      {:ok, %{valid: boolean(), refusal: :verification_failed | nil, alg: String.t()}}
+      | {:refused | :trap | :unsupported, %AshAffidavit.Refusal{}}
+
+  `valid: false` with `refusal: :verification_failed` is a decided-negative engine answer (a
+  well-formed key/signature over the wrong bytes), not a refusal. Encoded-but-broken material
+  (`malformed_public_key`/`malformed_signature`) maps to `{:refused, :bad_field}`; an algorithm
+  outside the engine's set maps to `{:unsupported, :unknown_op}`. Reads `:server`/`:timeout_ms`.
+  """
+  @spec verify_signature(map(), binary(), binary(), keyword()) ::
+          {:ok, map()} | {:refused, Refusal.t()} | {:trap, Refusal.t()} | {:unsupported, Refusal.t()}
+  def verify_signature(key_source, signature, signing_input, opts \\ [])
+
+  def verify_signature(key_source, _signature, _signing_input, _opts) when not is_map(key_source) do
+    {:refused, Refusal.new(:missing_field, "key material must be a map")}
+  end
+
+  def verify_signature(key_source, signature, signing_input, opts) when is_map(key_source) do
+    with {:ok, alg} <- algorithm_of(key_source, opts),
+         {:ok, key_hex} <- key_hex_of(key_source, opts),
+         {:ok, signature_hex} <- hex_arg(signature, "signature"),
+         {:ok, input_hex} <- hex_arg(signing_input, "signing_input") do
+      request = %{
+        "op" => "verify_signature",
+        "alg" => alg,
+        "public_key_hex" => key_hex,
+        "signature_hex" => signature_hex,
+        "signing_input_hex" => input_hex
+      }
+
+      case AshAffidavit.call(request, Keyword.take(opts, [:server, :timeout_ms])) do
+        {:ok, %{"valid" => valid, "refusal" => refusal}} ->
+          adjudicate(valid, refusal, alg)
+
+        other ->
+          other
+      end
+    end
+  end
+
+  defp algorithm_of(key_source, opts) do
+    cond do
+      envelope?(key_source) and is_binary(key_source["algorithm"]) and key_source["algorithm"] != "" ->
+        {:ok, key_source["algorithm"]}
+
+      envelope?(key_source) ->
+        {:refused, Refusal.new(:missing_field, "envelope carries no usable `algorithm` field")}
+
+      true ->
+        alg =
+          key_source[:alg] || key_source["alg"] || key_source[:algorithm] || key_source["algorithm"] ||
+            opts[:alg]
+
+        if is_binary(alg) and alg != "" do
+          {:ok, alg}
+        else
+          {:refused, Refusal.new(:missing_field, "key material carries no `alg`")}
+        end
+    end
+  end
+
+  defp envelope?(%{"version" => @envelope_version}), do: true
+  defp envelope?(_), do: false
+
+  defp key_hex_of(key_source, opts) do
+    hex =
+      key_source[:public_key_hex] || key_source["public_key_hex"] || opts[:public_key_hex]
+
+    raw = key_source[:public_key] || key_source["public_key"] || opts[:public_key]
+
+    cond do
+      is_binary(hex) and hex != "" ->
+        {:ok, hex}
+
+      is_binary(raw) and raw != "" ->
+        {:ok, Base.encode16(raw, case: :lower)}
+
+      true ->
+        {:refused, Refusal.new(:missing_field, "key material carries no public key")}
+    end
+  end
+
+  # A raw-bytes-or-hex argument: an even-length decodable hex string passes through; anything
+  # else is treated as raw bytes and hex-encoded. Raw bytes that happen to be valid hex text are
+  # indistinguishable and are taken as hex — the wire form is unambiguous either way.
+  defp hex_arg(value, _name) when is_binary(value) do
+    if byte_size(value) > 0 and rem(byte_size(value), 2) == 0 and Base.decode16(value, case: :mixed) do
+      {:ok, value}
+    else
+      {:ok, Base.encode16(value, case: :lower)}
+    end
+  end
+
+  defp hex_arg(_, name), do: {:refused, Refusal.new(:bad_field, "#{name} must be raw bytes or a hex string")}
+
+  defp adjudicate(true, _refusal, alg), do: {:ok, %{valid: true, refusal: nil, alg: alg}}
+
+  defp adjudicate(false, "verification_failed", alg),
+    do: {:ok, %{valid: false, refusal: :verification_failed, alg: alg}}
+
+  defp adjudicate(false, "unsupported_algorithm" <> _rest, alg) do
+    {:unsupported, Refusal.new(:unknown_op, "engine refuses the algorithm for this op", %{alg: alg})}
+  end
+
+  defp adjudicate(false, "malformed_" <> _rest = refusal, alg) do
+    {:refused, Refusal.new(:bad_field, refusal, %{alg: alg})}
+  end
+
+  defp adjudicate(false, refusal, alg) do
+    {:unsupported,
+     Refusal.new(:engine_unclassified, "engine returned an unrecognized verify_signature refusal", %{
+       refusal: refusal,
+       alg: alg
+     })}
+  end
 
   # A binary digest in either wire form: `width` raw bytes or 2*width hex chars.
   defp digest_shape(value, width) when is_binary(value) do

@@ -306,4 +306,144 @@ defmodule AshAffidavit.SigningCourtsTest do
 
     assert {:error, %Refusal{code: :invalid_encoding}} = Keys.from_jwks(%{"keys" => [std_b64]})
   end
+
+  # ---- court 8: verify_signature over the real pinned engine (RFC 8032 Ed25519 KAT) ----------
+
+  # RFC 8032 test vector 2, the same in-tree KAT the engine's own verify_signature op tests use.
+  @ed_key "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c"
+  @ed_input_hex "72"
+  @ed_sig "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00"
+
+  @tag :signing
+  test "a real Ed25519 signature verifies through the engine's verify_signature op" do
+    assert {:ok, %{valid: true, refusal: nil, alg: "Ed25519"}} =
+             Signing.verify_signature(
+               %{alg: "Ed25519", public_key_hex: @ed_key},
+               @ed_sig,
+               @ed_input_hex
+             )
+  end
+
+  @tag :signing
+  test "a tampered input is a decided-negative, and broken material is a typed refusal" do
+    # One flipped input bit: well-formed material, wrong bytes -> valid:false, not a refusal.
+    assert {:ok, %{valid: false, refusal: :verification_failed}} =
+             Signing.verify_signature(
+               %{alg: "Ed25519", public_key_hex: @ed_key},
+               @ed_sig,
+               "73"
+             )
+
+    # A key of the right family but wrong length: the engine's typed refusal, mapped.
+    assert {:refused, %Refusal{code: :bad_field, message: m, details: %{alg: "Ed25519"}}} =
+             Signing.verify_signature(
+               %{alg: "Ed25519", public_key_hex: "aabb"},
+               @ed_sig,
+               @ed_input_hex
+             )
+
+    assert m =~ "malformed_public_key"
+
+    # An algorithm outside the engine's set: :unsupported, never a false "invalid".
+    assert {:unsupported, %Refusal{code: :unknown_op}} =
+             Signing.verify_signature(
+               %{alg: "ML_DSA65", public_key_hex: @ed_key},
+               @ed_sig,
+               @ed_input_hex
+             )
+
+    # Missing key material and non-binary inputs are host refusals before any engine call.
+    assert {:refused, %Refusal{code: :missing_field}} =
+             Signing.verify_signature(%{alg: "Ed25519"}, @ed_sig, @ed_input_hex)
+
+    assert {:refused, %Refusal{code: :bad_field}} =
+             Signing.verify_signature(%{alg: "Ed25519", public_key_hex: @ed_key}, 7, @ed_input_hex)
+  end
+
+  @tag :signing
+  test "an envelope as key source routes by its algorithm field" do
+    assert {:refused, %Refusal{code: :missing_field, message: m}} =
+             Signing.verify_signature(@kat_envelope, @ed_sig, @ed_input_hex)
+
+    assert m =~ "public key"
+
+    # Routing follows the envelope's own `algorithm` field (ES256 here): an Ed25519 key under
+    # ES256 is the engine's typed malformed_public_key refusal, decided by the routed alg.
+    assert {:refused, %Refusal{code: :bad_field, message: routed}} =
+             Signing.verify_signature(@kat_envelope, @ed_sig, @ed_input_hex,
+               public_key_hex: @ed_key
+             )
+
+    assert routed =~ "ES256"
+  end
+
+  # ---- court 9: derive_subject_digest over the real pinned engine (Rust-side KAT) -------------
+
+  # KAT extracted from the engine repo's crypto.rs: the rendered plane's
+  # crypto_trust_canonical::digest_hex law, DOMAIN_TAG "affidavit-paid-delivery/v1",
+  # computed against blake3 1.8.5 (the pinned crate in the engine's Cargo.lock).
+  @kat_tag "affidavit-paid-delivery/v1"
+  @kat_subject "paid-delivery:evt-001"
+  @kat_digest_hex "3ca4fb8419bd2319a832f8c9b2a5e2d8f2e8105c17d5fc6115de0238a7ec5e3f"
+
+  @tag :signing
+  test "derive_subject_digest matches the Rust-side KAT and audits its pre-image" do
+    assert {:ok, %{digest_hex: digest_hex, pre_image_hex: pre_hex, digest: digest}} =
+             Signing.derive_subject_digest(@kat_tag, @kat_subject)
+
+    assert digest_hex == @kat_digest_hex
+    assert byte_size(digest) == 32
+
+    # The pre-image audit field: tag twice, 0x00 separators, u64-be length, then the subject.
+    {:ok, pre} = Base.decode16(pre_hex, case: :lower)
+    tag_bytes = @kat_tag
+
+    assert pre ==
+             tag_bytes <> <<0>> <> tag_bytes <> <<0>> <> <<byte_size(@kat_subject)::size(64)>> <> @kat_subject
+  end
+
+  @tag :signing
+  test "cross-domain derivation differs and an empty domain tag refuses typed" do
+    {:ok, a} = Signing.derive_subject_digest(@kat_tag, "x")
+    {:ok, b} = Signing.derive_subject_digest("affidavit.other-domain/v1", "x")
+
+    refute a.digest_hex == b.digest_hex
+
+    assert {:refused, %Refusal{code: :bad_field}} = Signing.derive_subject_digest("", "x")
+  end
+
+  # ---- court 10: engine-derived subject binding in verify_certified_receipt (AG2r gap #2) -----
+
+  @envelope_tag "affidavit.crypto-trust-plane.v1"
+
+  @tag :signing
+  test "an engine-derived digest binds the envelope where the caller-attested path stays green" do
+    {:ok, honest} = Signing.signing_input(@kat_envelope)
+
+    # The AG2r byte-identical pre-image court stays green: caller-attested path unchanged.
+    assert {:ok, %{verified_pre_image: true, subject_binding: :unchecked}} =
+             Signing.verify_certified_receipt(@kat_envelope, String.duplicate("ab", 32), "s1",
+               expected_signing_input_hex: honest
+             )
+
+    # Engine-derived: digest "s1" under the envelope domain tag through the engine and mint an
+    # envelope that binds it. The derivation is the engine's, not the caller's.
+    {:ok, %{digest: digest}} = Signing.derive_subject_digest(@envelope_tag, "s1")
+    bound = Map.merge(@kat_envelope, %{"subject_digest" => :binary.bin_to_list(digest)})
+
+    assert {:ok, %{subject_binding: :verified, subject_binding_source: :engine_derived}} =
+             Signing.verify_certified_receipt(bound, String.duplicate("ab", 32), "s1",
+               expected_signing_input_hex: honest,
+               domain_tag: @envelope_tag
+             )
+
+    # The same envelope with a subject it does not bind refuses on the engine-derived check.
+    assert {:refused, %Refusal{code: :bad_field, message: m}} =
+             Signing.verify_certified_receipt(bound, String.duplicate("ab", 32), "s2",
+               expected_signing_input_hex: honest,
+               domain_tag: @envelope_tag
+             )
+
+    assert m =~ "engine-derived"
+  end
 end
