@@ -62,6 +62,11 @@ signature-verify op and no subject-digest derivation op — `verified_pre_image`
 `subject_binding` a host witness, never a signature verdict |
 | `lib/ash_affidavit/signing/keys.ex` | no pack template emits a key/JWKS loading surface; structural
 normalization and closed algorithm-set routing only (the wasm ABI consumes no key material) |
+| `lib/ash_affidavit/ops.ex` | no pack template emits typed wrappers over the remaining wasm-ABI ops
+(`assemble`, `mine`, `conform`, `certify_authzen_evidence`, `certify_spiffe_evidence`, `jcs_canonicalize`,
+`smt_absence_verify`, `range_proof_verify`); one typed function plus a pure request-map builder per op,
+mirroring the `verify_signature` pattern; courts assert the built requests against
+`priv/affidavit/op-examples.json` (EA60 lane) |
 | `test/support/affidavit_resource.ex` | test fixture resource and domain; no pack template emits Ash fixtures |
 | `.formatter.exs`, `.credo.exs`, `mix.exs` | repo configuration; no pack emits project config or the Spark formatter export list; `mix.exs` also holds the hand-declared deps (see gaps) |
 | `scripts/consume.sh`, `scripts/render_extension.sh`, `scripts/pack_fingerprint.py`, `ggen.toml` | consumer-side drivers; no pack emits them |
