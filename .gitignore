@@ -11,3 +11,10 @@
 erl_crash.dump
 /_build*/
 /priv/plts/
+
+# lane-lease build roots (fan-out campaign)
+target/
+node_modules/
+.DS_Store
+_build-lane*/
+target-lane*/
