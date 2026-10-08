@@ -26,6 +26,8 @@ Every entry verified against `lib/` in ash_affidavit 26.10.8.
 
 - [Public API](reference/public-api.md) — every public function, the engine
   ops, host/pool, refusals, configuration and mix tasks.
+- [Generated API reference](reference/generated/README.md) — doc-hdit
+  scaffolded skeletons rendered from the code surface (do not edit by hand).
 
 ## Explanation
 
