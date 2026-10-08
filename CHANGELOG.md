@@ -14,6 +14,22 @@ All notable changes to this project are recorded here. The version is CalVer (`Y
 
 - Version bumped to 26.10.8; install snippets in the README, usage rules, getting-started
   guide and diataxis docs updated to `~> 26.10.8`.
+- Signing surface (`AshAffidavit.Signing`): `verify_signature/4` adjudicates one signature
+  per-algorithm through the engine's `verify_signature` op (ES256 DER low-s, ES256K fixed
+  64-byte low-s over a compressed SEC1 key, Ed25519 strict); `derive_subject_digest/3` derives
+  the domain-separated BLAKE3 subject digest through the engine, with the auditable pre-image;
+  `verify_certified_receipt/4` gained a `:domain_tag` option so the subject binding is
+  engine-derived instead of caller-attested.
+- `AshAffidavit.Signing.Keys`: JWKS loading with per-algorithm structural key validation
+  (Ed25519 `x` 32 bytes; ES256/ES256K JWK `x`+`y` or SEC1 point; unpadded base64url only).
+- `AshAffidavit.Ops`: one typed function plus a pure request-map builder per previously
+  unwrapped wasm-ABI op (`assemble`, `mine`, `conform`, `certify_authzen_evidence`,
+  `certify_spiffe_evidence`, `jcs_canonicalize`, `smt_absence_verify`, `range_proof_verify`),
+  mirroring the `verify_signature/4` pattern; builders are pure so courts assert them against
+  `priv/affidavit/op-examples.json` without a live engine.
+- New courts: the AIRo ledger pin court (`test/airo_w690_pin_test.exs`) checks the ledger SHA
+  pin against real fixture bytes, VIA-module resolution and AIRo 1.0 vocabulary; RFC 8032
+  Ed25519 known-answer and cross-domain digest courts over the signing ops.
 
 ## [v26.10.1](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.10.1) (2026-10-01)
 
