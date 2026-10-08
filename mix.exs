@@ -76,8 +76,11 @@ defmodule AshAffidavit.MixProject do
       extras: extras(),
       extra_section: "GUIDES",
       groups_for_extras: [
-        Tutorials: ~r'documentation/tutorials',
+        Tutorials: [~r'documentation/tutorials', ~r'docs/diataxis/tutorials'],
         Topics: ~r'documentation/topics',
+        "How-To Guides": ~r'docs/diataxis/how-to',
+        Reference: ~r'docs/diataxis/reference',
+        Explanations: ~r'docs/diataxis/explanation',
         "DSL Reference": ~r'documentation/dsls',
         "About AshAffidavit": [
           "AGENTS.md",
@@ -127,6 +130,11 @@ defmodule AshAffidavit.MixProject do
       Path.wildcard("documentation/tutorials/*.md") ++
       Path.wildcard("documentation/topics/*.md") ++
       Path.wildcard("documentation/dsls/*.md") ++
+      [{"docs/diataxis/README.md", title: "Documentation Map"}] ++
+      Path.wildcard("docs/diataxis/tutorials/*.md") ++
+      Path.wildcard("docs/diataxis/how-to/*.md") ++
+      Path.wildcard("docs/diataxis/reference/*.md") ++
+      Path.wildcard("docs/diataxis/explanation/*.md") ++
       existing(["AGENTS.md", "HANDWRITTEN.md", "CHANGELOG.md", "LICENSE"])
   end
 
