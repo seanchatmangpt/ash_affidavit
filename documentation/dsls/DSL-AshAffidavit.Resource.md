@@ -20,7 +20,7 @@ Affidavit engine configuration: one runtime entity and any number of operations.
 
 
 
-### affidavit.runtime
+### affidavit.runtime {: #affidavit-runtime }
 
 
 
@@ -45,7 +45,7 @@ Affidavit engine configuration: one runtime entity and any number of operations.
 
 
 
-### affidavit.operation
+### affidavit.operation {: #affidavit-operation }
 ```elixir
 operation name
 ```
