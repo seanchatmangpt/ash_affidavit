@@ -309,8 +309,6 @@ defmodule AshAffidavit.Signing do
 
   # ---- engine-derived subject binding (ABI-gap closure, AG2r #2) -----------------------------
 
-  @envelope_domain_tag "affidavit.crypto-trust-plane.v1"
-
   @doc """
   Derives a domain-separated subject digest through the engine's `derive_subject_digest` op.
 
