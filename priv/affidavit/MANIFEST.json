@@ -1,12 +1,12 @@
 {
   "schema": "ash_affidavit.affidavit.manifest/v1",
-  "affidavit_version": "26.9.28",
+  "affidavit_version": "26.10.5",
   "abi_version": 1,
   "artifact": {
     "file": "affidavit.wasm",
-    "sha256": "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7",
-    "bytes": 284650,
-    "url": "https://github.com/seanchatmangpt/affidavit/releases/download/v26.9.28/affidavit.wasm"
+    "sha256": "5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402",
+    "bytes": 660847,
+    "url": "https://github.com/seanchatmangpt/affidavit/releases/download/v26.10.5/affidavit.wasm"
   },
   "host_abi": {
     "exports": [
@@ -56,8 +56,18 @@
           "i32"
         ],
         "results": []
+      },
+      {
+        "name": "random_get",
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ]
       }
     ]
   },
-  "provenance": "local build of affidavit-wasm (cargo --target wasm32-wasip1 --profile wasm) from the affidavit checkout at 8749f0be1ce6836b1c6f30b8ac2957ae0d2ec345 (clean tree); pin equals affidavit-wasm/registry/ARTIFACTS.sha256; ops include certify_authzen_evidence and certify_spiffe_evidence; artifact.url is the intended release location and was NOT published or fetched by this build; the wasm is vendored in this package, so mix ash_affidavit.vendor --check needs no network"
+  "provenance": "local build of affidavit-wasm (cargo --target wasm32-wasip1 --profile wasm) from the affidavit checkout at 4f654d21f3863ad89a11a62325c1dbf875cf72df; pin equals affidavit-wasm/registry/ARTIFACTS.sha256 and registry/artifact-pin.json; ops add verify_signature and derive_subject_digest alongside certify_authzen_evidence and certify_spiffe_evidence; artifact.url is the intended release location and was NOT published or fetched by this build; the wasm is vendored in this package, so mix ash_affidavit.vendor --check needs no network"
 }

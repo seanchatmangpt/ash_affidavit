@@ -1,0 +1,193 @@
+# AIRo risk description for ash_affidavit (lane W637, AIRo wiring wave).
+# Vocabulary: https://w3id.org/airo# (AIRo 1.0, DelaramGlp/airo @main, airo.ttl,
+# vendored in xaas at sha256 6274d2d8711e046cf38f1b5b2980188094d4aa87b5af79804005a06468fd8469,
+# DelaramGlp/airo@6c67de43).
+# Subject: the crypto trust plane — ash_affidavit loads a SHA-256-pinned WebAssembly
+# engine behind a typed ABI (v1), runs typed affidavit ops through it, and gates every
+# signing key through a closed-algorithm JWKS admission (ED25519, ES256, ES256K,
+# ML_DSA65, SLH_DSA_SHA2_128s, HYBRID_ES256_ML_DSA65). Its receipts are consumed by
+# downstream witness surfaces (e.g. the xaas CertifiedReceipt trust plane).
+#
+# Every "VIA <path>" below is a real path in this repository at authoring time;
+# test/airo_risk_description_test.exs asserts their existence.
+
+@prefix airo: <https://w3id.org/airo#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix w637: <https://chatman-ecosystem.dev/airo/ash-affidavit#> .
+
+#################################################################
+# The AI system
+#################################################################
+
+w637:AffidavitCryptoTrustPlane a airo:AISystem ;
+    rdfs:label "ash_affidavit crypto trust plane (pinned wasm engine + signing + JWKS gate)"@en ;
+    dcterms:description """Signature trust system: a SHA-256-pinned WebAssembly engine is
+    loaded behind a typed ABI (version 1) with import-surface and export checks, typed
+    affidavit ops run through it with {refused, trap, unsupported} outcomes, and a JWKS
+    admission gate admits signing keys only from a closed algorithm set (ED25519,
+    Ed25519, ES256, ES256K, ML_DSA65, SLH_DSA_SHA2_128s, HYBRID_ES256_ML_DSA65).
+    Signatures and receipts produced here anchor downstream witness chains (e.g. the
+    xaas CertifiedReceipt / AuditChain trust plane), so an admitted-but-unverifiable
+    key or a silently faked signature propagates untrusted material as certified."""@en ;
+    airo:hasPurpose "Pinned, typed, receipted affidavit signing and signature verification."@en ;
+    airo:hasComponent w637:PinnedEngineLoad , w637:TypedOpsSurface , w637:SigningEnvelope , w637:JwksKeyGate ;
+    airo:producesOutput w637:SignedAffidavitReceipt ;
+    airo:hasAIUser w637:WitnessConsumer ;
+    airo:hasLifecyclePhase w637:EngineLoadAndSigningPhase .
+
+w637:EngineLoadAndSigningPhase a airo:AILifecyclePhase ;
+    rdfs:label "Engine load (pinned digest + ABI check), op execution, key admission, signing"@en .
+
+w637:WitnessConsumer a airo:AIUser ;
+    rdfs:label "Downstream witness/audit surface consuming signed affidavits and receipts"@en .
+
+w637:PinnedEngineLoad a airo:AIComponent ;
+    rdfs:label "Pinned wasm engine load with digest and ABI-surface checks"@en ;
+    dcterms:description "VIA lib/ash_affidavit/engine_load.ex (expected_sha256/pinned_sha256 via WasmConfig, :wasm_import_surface_mismatch, :wasm_missing_export), lib/ash_affidavit/wasm_config.ex, lib/ash_affidavit/abi.ex (@abi_version 1)."@en .
+
+w637:TypedOpsSurface a airo:AIComponent ;
+    rdfs:label "Typed affidavit op surface with refused/trap/unsupported outcomes"@en ;
+    dcterms:description "VIA lib/ash_affidavit/ops.ex (typed op wrappers; UNSUPPORTED(generator-capability) hand-written residue, ledgered in HANDWRITTEN.md)."@en .
+
+w637:SigningEnvelope a airo:AIComponent ;
+    rdfs:label "Signing envelope surface (signing input, signature verify dispatch)"@en ;
+    dcterms:description "VIA lib/ash_affidavit/signing.ex (signing_input/2, verify_signature/4)."@en .
+
+w637:JwksKeyGate a airo:AIComponent ;
+    rdfs:label "JWKS closed-algorithm key admission gate"@en ;
+    dcterms:description "VIA lib/ash_affidavit/signing/keys.ex (@algorithms closed set incl. ML_DSA65; from_jwks/2 typed refusals :invalid_json/:bad_field/:missing_field; select/2 admits only in-set algorithms)."@en .
+
+w637:SignedAffidavitReceipt a airo:Output ;
+    rdfs:label "Signed affidavits and signature verdicts crossing to witness consumers"@en .
+
+#################################################################
+# Risk sources (real, documented hazards)
+#################################################################
+
+# RS-1: the wasm-engine ML_DSA65 op is UNSUPPORTED at the pinned ABI (w510's seam) — OPEN.
+w637:EngineMldsaUnsupported a airo:Hazard ;
+    rdfs:label "Pinned wasm ABI exposes no key-consuming ML_DSA65 sign/verify op"@en ;
+    dcterms:description """AshAffidavit.Signing.verify_signature/4 returns
+    {:unsupported, %Refusal{code: :unknown_op}} for alg: "ML_DSA65" because the pinned
+    wasm engine ABI exposes no key-consuming sign/verify operation — witnessed in
+    VIA test/ash_affidavit_signing_courts_test.exs (the ":unsupported, never a false
+    invalid" court at signing_courts_test.exs:348). Consequence: the engine surface
+    cannot produce or check an ML-DSA-65 signature today; ML_DSA65 keys pass the JWKS
+    gate (select/2 admits them structurally :ok pending AG1 envelope lengths) but must
+    be signed host-side. The documented seam is the xaas W510 host-side OpenSSL 3.6.4
+    ML-DSA-65 flow (test/xaas/witness/ml_dsa_signed_receipt_test.exs, xaas repo @
+    feat/playwright-surface) to be dropped in when AG1/AG3 lands the engine op."""@en ;
+    airo:isRiskSourceFor w637:AffidavitCryptoTrustPlane .
+
+# RS-2: key-management exposure — structural-only JWKS validation — BOUNDED.
+w637:KeyManagementExposure a airo:Hazard ;
+    rdfs:label "JWKS key admission is structural; PQ families admitted without cryptographic key checks"@en ;
+    dcterms:description """The keys.ex moduledoc states validation is structural only: a
+    JWKS document is decoded, each key checked for required members and the closed
+    algorithm set; post-quantum families (ML_DSA65, SLH_DSA_SHA2_128s,
+    HYBRID_ES256_ML_DSA65) are admitted structurally :ok pending AG1 envelope lengths
+    (VIA lib/ash_affidavit/signing/keys.ex). A well-formed but wrong/malicious key of an
+    in-set algorithm is admitted by this gate; trust rests on the pinned engine's op
+    surface, which currently has no ML_DSA65 op at all (RS-1). Bounded: the set is
+    closed and every out-of-set key is typed-refused by select/2 rather than silently
+    kept."""@en ;
+    airo:isRiskSourceFor w637:AffidavitCryptoTrustPlane .
+
+#################################################################
+# Risks, consequences, impacts
+#################################################################
+
+w637:UntrustedSignatureRisk a airo:Risk ;
+    rdfs:label "Unverifiable or untrusted material is propagated as certified receipt"@en .
+
+w637:AffidavitCryptoTrustPlane airo:hasRisk w637:UntrustedSignatureRisk .
+
+w637:UntrustedSignatureRisk airo:hasConsequence w637:FalseVerdictConsequence , w637:PqGapConsequence .
+
+w637:FalseVerdictConsequence a airo:Consequence ;
+    rdfs:label "A signature verdict is faked (false valid/invalid) instead of typed-refused"@en ;
+    airo:hasImpact w637:CertificationIntegrityImpact .
+
+w637:PqGapConsequence a airo:Consequence ;
+    rdfs:label "A PQ algorithm is named but silently unsigned/never engine-verified"@en ;
+    airo:hasImpact w637:CertificationIntegrityImpact .
+
+w637:CertificationIntegrityImpact a airo:Impact ;
+    rdfs:label "Loss of certification integrity of downstream witness/audit chains"@en ;
+    airo:hasImpactOnStakeholder w637:WitnessConsumer .
+
+w637:AffidavitCryptoTrustPlane
+    airo:hasLikelihood w637:LowLikelihood ;
+    airo:hasSeverity w637:MediumSeverity .
+
+w637:LowLikelihood a airo:Likelihood ;
+    rdfs:label "Low (qualitative, post-mitigation: typed refusals, pinned engine, closed key set)"@en .
+
+w637:MediumSeverity a airo:Severity ;
+    rdfs:label "Medium (qualitative: downstream certification/audit integrity)"@en .
+
+#################################################################
+# Risk controls (the real gates)
+#################################################################
+
+w637:AffidavitCryptoTrustPlane airo:hasRiskControl
+    w637:JwksClosedAlgorithmGate , w637:TypedUnsupportedRefusal , w637:PinnedEngineDigestGate , w637:SigningCourts , w637:HostSideMldsaSeam .
+
+w637:JwksClosedAlgorithmGate a airo:RiskControl ;
+    rdfs:label "JWKS closed algorithm set + typed refusal on every out-of-set key"@en ;
+    dcterms:description """VIA lib/ash_affidavit/signing/keys.ex: @algorithms is a closed
+    set (ED25519 Ed25519 ES256 ES256K ML_DSA65 SLH_DSA_SHA2_128s
+    HYBRID_ES256_ML_DSA65); from_jwks/2 typed-refuses ill-formed JWKS
+    (:invalid_json, :bad_field, :missing_field) and select/2 keeps out-of-set
+    algorithm keys in the set but refuses them at selection with a typed refusal —
+    no ambient admission of foreign algorithms."""@en ;
+    airo:mitigatesRiskConcept w637:KeyManagementExposure , w637:UntrustedSignatureRisk ;
+    airo:detectsRiskConcept w637:KeyManagementExposure .
+
+w637:TypedUnsupportedRefusal a airo:RiskControl ;
+    rdfs:label "Unsupported engine op is a typed :unknown_op refusal, never a faked verdict"@en ;
+    dcterms:description """VIA lib/ash_affidavit/signing.ex (verify_signature/4) and the
+    op surface VIA lib/ash_affidavit/ops.ex ({:refused, :trap, :unsupported} outcome
+    family, typed VIA lib/ash_affidavit/refusal.ex): an operation the pinned ABI does
+    not expose returns {:unsupported, %Refusal{code: :unknown_op}} — the signing courts
+    pin that this is "never a false invalid" (VIA
+    test/ash_affidavit_signing_courts_test.exs). The op wrappers themselves are
+    UNSUPPORTED(generator-capability) hand-written residue, ledgered in
+    HANDWRITTEN.md."""@en ;
+    airo:mitigatesRiskConcept w637:EngineMldsaUnsupported , w637:FalseVerdictConsequence ;
+    airo:detectsRiskConcept w637:EngineMldsaUnsupported , w637:FalseVerdictConsequence .
+
+w637:PinnedEngineDigestGate a airo:RiskControl ;
+    rdfs:label "Pinned engine SHA-256 digest + ABI import/export surface checks at load"@en ;
+    dcterms:description """VIA lib/ash_affidavit/engine_load.ex (expected_sha256 /
+    pinned_sha256 VIA lib/ash_affidavit/wasm_config.ex; :wasm_import_surface_mismatch
+    and :wasm_missing_export refusals) over the typed ABI version pin VIA
+    lib/ash_affidavit/abi.ex (@abi_version 1); unauthorized engine bytes are refused
+    before any op executes; the pin discipline is courted by
+    test/ash_affidavit_pinned_wasm_test.exs."""@en ;
+    airo:mitigatesRiskConcept w637:UntrustedSignatureRisk , w637:KeyManagementExposure .
+
+w637:SigningCourts a airo:RiskControl ;
+    rdfs:label "Signing/pin/refusal courts (ExUnit) over the trust plane"@en ;
+    dcterms:description """Real-collaborator courts: VIA
+    test/ash_affidavit_signing_courts_test.exs (JWKS gate incl. ML_DSA65 selection and
+    the :unknown_op unsupported court), VIA test/ash_affidavit_pinned_wasm_test.exs
+    (pinned engine load), VIA test/ash_affidavit_refusal_test.exs (typed refusal
+    surface), and this file's structural court VIA
+    test/airo_risk_description_test.exs."""@en ;
+    airo:mitigatesRiskConcept w637:EngineMldsaUnsupported , w637:KeyManagementExposure , w637:UntrustedSignatureRisk ;
+    airo:detectsRiskConcept w637:EngineMldsaUnsupported , w637:KeyManagementExposure .
+
+w637:HostSideMldsaSeam a airo:RiskControl ;
+    rdfs:label "Host-side ML-DSA-65 seam (W510) bridging the engine op gap until AG1/AG3"@en ;
+    dcterms:description """Cross-repo control (described, not VIA): the xaas W510 flow
+    signs and verifies real ML-DSA-65 (FIPS 204) host-side via the OpenSSL 3.6.4 CLI
+    subprocess over JCS-canonical payloads — positive + tamper-negative controls,
+    persisted through Xaas.Witness.CertifiedReceipt and wired as the real AuditChain
+    sig callback (test/xaas/witness/ml_dsa_signed_receipt_test.exs, xaas repo @
+    feat/playwright-surface; receipt docs/sjira/v26.10.6/plans/w510-mldsa-signing.md).
+    This closes the consumer-side hazard while RS-1 stays OPEN at the pinned engine
+    ABI."""@en ;
+    airo:mitigatesRiskConcept w637:EngineMldsaUnsupported , w637:PqGapConsequence .

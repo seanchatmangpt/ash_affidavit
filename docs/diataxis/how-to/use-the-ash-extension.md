@@ -6,7 +6,7 @@ extension and its Ash integrations.
 
 ## Prerequisites
 
-- `ash_affidavit` 26.10.1 with the pool running
+- `ash_affidavit` 26.10.8 with the pool running
   (`config :ash_affidavit, start_pool: true`).
 - An Ash domain. This guide mirrors the tested fixture at
   `test/support/affidavit_resource.ex`.

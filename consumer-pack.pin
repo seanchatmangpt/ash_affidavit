@@ -9,17 +9,17 @@
 schema = "ash_affidavit.consumer-pack.pin/1"
 pack = "qri-consumer-binding-pack"
 pack_version = "26.9.30"
-pack_commit = "20ff9279f4eaddc1e4fbf00f79ae6ad44c0f7732"
+pack_commit = "57345c2e725ca066837e98d0e327da51569be8ee"
 pack_base_commit = "80d429f13cc887f66855ba4029f6d83aa3a8098f"
-pack_fingerprint = "sha256:35a75ac3b2cd65a80e3fdbc749ad8c447ba6c6ca02ad5c6d577a4f6fc8b164bf"
+pack_fingerprint = "sha256:2a75e80e3e9cc39f7c5195ca870e298c7a3c446a9dac5e5e4e75cbdda7b9b0ff"
 pack_content_digest = "f1015c198374e5e9b3bf629dabb90a90a32127f5a60caa57fcb3d9dc61568bda"
 generator_version = "26.9.28"
-affidavit_base_commit = "8749f0be1ce6836b1c6f30b8ac2957ae0d2ec345"
-affidavit_commit = "16aa537f5c50ea50ea913a4e500b337e24837774"
-artifact_sha256 = "5e721cc20d07193eee5d489077f4cb534f12c45f948e53247f79f38a5a7761f7"
-artifact_bytes = 284650
-artifact_pin_registry_sha256 = "ebac457843cd2322af575f02583a4a2a2a11a2488de6ee0eabef468861ebe61b"
-contract_digest = "60dc0100b5d3a56131cdf2b9b8ebce83c024b3930963d95e7c888880c060c1e6"
+affidavit_base_commit = "97e6b526b091bf5e0e0299a84d9bc74889e38522"
+affidavit_commit = "4f654d21f3863ad89a11a62325c1dbf875cf72df"
+artifact_sha256 = "5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402"
+artifact_bytes = 660847
+artifact_pin_registry_sha256 = "912c5a7c3d38fd053bb2c0fca8cc08bdc5138f9c9a08fb537f170342233355ee"
+contract_digest = "f156c190c6c6dca0be78c88ca3cb9f7fe01fca2bf31d0523477978abd656ccd8"
 authority_ceiling = "NONE"
 
 # ash-extension-pack: source of the generated Spark/Igniter surface (scripts/render_extension.sh). The export is
@@ -39,4 +39,4 @@ ext_pack_content_digest = "978decb1f420589b5c0d1f714d54a5949b5f23c15feb27d88e414
 "lib/ash_affidavit/pool.ex" = "f3cd7fb0a06b1528b09883187d68b5edb98330ebd6d480c154b57a59a2fdb638"
 "lib/mix/tasks/ash_affidavit.vendor.ex" = "54da31a3c98049bc18c62827d4ffaa6770a8c03326278adcd31deb58411dccbb"
 "lib/mix/tasks/ash_affidavit.verify.ex" = "e65d12348b003bb67cdf4278c0128b5a5b9c6dd9b48d75894167005b05c95ed4"
-"priv/affidavit/MANIFEST.json" = "20dd7a084f7efd3fc08b0148bc814c0cfef5d394bb4d2c6bfd33a8b022f0974e"
+"priv/affidavit/MANIFEST.json" = "ef3d0fb587c970767082fbe5e26f82ce9f744ad612e98cf2fe8a281842272261"
