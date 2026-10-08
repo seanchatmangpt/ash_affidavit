@@ -1,0 +1,117 @@
+@prefix sj: <https://ggen-igniter.dev/ontology/semantic-jira#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Canonical RDF for the v26.10.8 fleet campaign on seanchatmangpt/ash_affidavit.
+# One sj:WorkOrder per campaign work order, grounded in landed commits on main.
+# Shape follows the xaas v26.10.8 canonical workgraph and this repo's archived
+# docs/archive/v26.10.3/ARD-PRD.ttl vocabulary. Standing is NOT asserted here:
+# it is observed state, projected from the per-commit court evidence named in
+# each order. This graph grants no authority and claims no standing; standing
+# belongs to independent exact-subject courts, not to this document.
+
+sj:WorkOrder a rdfs:Class .
+sj:AcceptanceCriterion a rdfs:Class .
+sj:Falsifier a rdfs:Class .
+sj:DependencyEdge a rdfs:Class .
+
+<#WO-AA-26108-1> a sj:WorkOrder ;
+    sj:identity "AA-26108-1" ;
+    dcterms:title "Release v26.10.8: version bump 26.10.1 -> 26.10.8" ;
+    dcterms:description "Bump the release version 26.10.1 -> 26.10.8 across all version carriers (mix.exs, CHANGELOG.md, README.md, diataxis and documentation tutorials/references) per 1a80667aedfc3412d46a0b9bed8688f122271c94." ;
+    sj:subject "v26108-version-bump" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:baseSha "56d5fb54a582be42abffe04a73725880e26658c7" ;
+    sj:landedCommit "1a80667aedfc3412d46a0b9bed8688f122271c94" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.8-AA-26108-1" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "compile", "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix.exs @version reads 26.10.8 on main HEAD 56d5fb54a582be42abffe04a73725880e26658c7 and no version carrier still names 26.10.1" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "a version carrier on main HEAD still names 26.10.1" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "mix.exs CHANGELOG.md README.md docs documentation" .
+
+<#WO-AA-26108-2> a sj:WorkOrder ;
+    sj:identity "AA-26108-2" ;
+    dcterms:title "W690 AIRo ledger pin court" ;
+    dcterms:description "Land the W690 AIRo ledger pin court (test/airo_w690_pin_test.exs) pinning the AIRo ledger reference and refusing drift (53b64474e9dbb73f6e1f09e7c83234e6c818704c)." ;
+    sj:subject "w690-airo-ledger-pin-court" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:baseSha "1a80667aedfc3412d46a0b9bed8688f122271c94" ;
+    sj:landedCommit "53b64474e9dbb73f6e1f09e7c83234e6c818704c" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.8-AA-26108-2" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix test test/airo_w690_pin_test.exs prints 0 failures on the exact subject 53b64474e9dbb73f6e1f09e7c83234e6c818704c" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "the W690 pin court fails on the exact subject 53b64474e9dbb73f6e1f09e7c83234e6c818704c" ], [ a sj:Falsifier ; sj:index 1 ; dcterms:description "the pinned AIRo ledger reference drifts without the court refusing it" ] ;
+    sj:projection "jira", "verification" ;
+    sj:pathScope "test/airo_w690_pin_test.exs" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-26108-1" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-26108-3> a sj:WorkOrder ;
+    sj:identity "AA-26108-3" ;
+    dcterms:title "Changelog: v26.10.8 entry (signing surface, Ops wrappers, W690 court)" ;
+    dcterms:description "Land the v26.10.8 CHANGELOG entry covering the signing surface, Ops wrappers and the W690 court (6dfb2181945827348f2668d3c271bfa5393d305a)." ;
+    sj:subject "changelog-v26108" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:baseSha "53b64474e9dbb73f6e1f09e7c83234e6c818704c" ;
+    sj:landedCommit "6dfb2181945827348f2668d3c271bfa5393d305a" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.8-AA-26108-3" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "compile" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "CHANGELOG.md carries the 26.10.8 section naming the signing surface, Ops wrappers and the W690 court, and its version matches mix.exs @version" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "a changelog entry names a version whose carriers disagree with mix.exs" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "CHANGELOG.md" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-26108-2" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-26108-4> a sj:WorkOrder ;
+    sj:identity "AA-26108-4" ;
+    dcterms:title "Diataxis signature-envelope how-to + doc-system wiring + archive move" ;
+    dcterms:description "Add the signature-envelope how-to (docs/diataxis/how-to/signature-envelope.md), diataxis README doc-system wiring, and relocate the superseded v26.10.3 ARD-PRD to docs/archive/v26.10.3/ via git mv (a236d31c7634f43648bb1ef0330f03ec126ba0e8)." ;
+    sj:subject "signature-envelope-how-to" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:baseSha "6dfb2181945827348f2668d3c271bfa5393d305a" ;
+    sj:landedCommit "a236d31c7634f43648bb1ef0330f03ec126ba0e8" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.8-AA-26108-4" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "compile" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "docs/diataxis/how-to/signature-envelope.md exists and is indexed from docs/diataxis/README.md and documentation/README.md; docs/sjira/v26.10.3/ARD-PRD.ttl no longer exists at its pre-archive path" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "a how-to reference from the diataxis index names a path that does not exist on disk" ], [ a sj:Falsifier ; sj:index 1 ; dcterms:description "the archived ARD-PRD still exists at its pre-archive path (copy instead of git mv)" ] ;
+    sj:projection "jira", "verification" ;
+    sj:pathScope "docs/diataxis documentation/README.md docs/archive" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-26108-3" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-26108-5> a sj:WorkOrder ;
+    sj:identity "AA-26108-5" ;
+    dcterms:title "Generated API reference skeletons (doc-hdit scaffold)" ;
+    dcterms:description "Land the doc-hdit scaffolded generated reference under docs/diataxis/reference/generated/ (explanation, how_to, reference indexes) with diataxis README wiring (56d5fb54a582be42abffe04a73725880e26658c7)." ;
+    sj:subject "generated-reference-skeletons" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:baseSha "a236d31c7634f43648bb1ef0330f03ec126ba0e8" ;
+    sj:landedCommit "56d5fb54a582be42abffe04a73725880e26658c7" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.8-AA-26108-5" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "compile" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "docs/diataxis/reference/generated/ carries the scaffolded indexes and docs/diataxis/README.md links them, with every linked path existing on disk" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "a generated reference entry names a public module that does not exist in lib/" ], [ a sj:Falsifier ; sj:index 1 ; dcterms:description "a diataxis index links a generated reference path that does not exist on disk" ] ;
+    sj:projection "jira", "verification" ;
+    sj:pathScope "docs/diataxis/reference/generated docs/diataxis/README.md" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-26108-4" ; sj:dependencyType "requiresReceipt" ] .
