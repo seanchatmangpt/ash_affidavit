@@ -10,6 +10,11 @@ All notable changes to this project are recorded here. The version is CalVer (`Y
 
 <!-- changelog -->
 
+## [v26.10.8](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.10.8) (2026-10-08)
+
+- Version bumped to 26.10.8; install snippets in the README, usage rules, getting-started
+  guide and diataxis docs updated to `~> 26.10.8`.
+
 ## [v26.10.1](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.10.1) (2026-10-01)
 
 First publication on hex.pm.

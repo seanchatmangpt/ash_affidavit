@@ -18,7 +18,7 @@ Everything runs locally: the engine is vendored at
 ## Before you start
 
 - Elixir on the BEAM with the `ash_affidavit` dependency installed
-  (`{:ash_affidavit, "~> 26.10.1"}`).
+  (`{:ash_affidavit, "~> 26.10.8"}`).
 - No extra services. The engine runs in-process via `wasmex`.
 
 ## 1. Start the pool

@@ -1,6 +1,6 @@
 # Reference: Public API
 
-Every entry verified against `lib/` in ash_affidavit 26.10.1. The engine
+Every entry verified against `lib/` in ash_affidavit 26.10.8. The engine
 (affidavit v26.9.28, ABI 1) is vendored at `priv/affidavit/affidavit.wasm`,
 pinned in `priv/affidavit/MANIFEST.json`.
 
