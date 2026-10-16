@@ -17,5 +17,12 @@ target/
 node_modules/
 .DS_Store
 _build-lane*/
+_build-*/
 target-lane*/
 docs/thesis/
+*.env
+*.env.*
+*.local
+.env
+.fetch
+.hex/
