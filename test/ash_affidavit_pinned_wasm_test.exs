@@ -50,7 +50,7 @@ defmodule AshAffidavit.PinnedWasmTest do
 
     # A flip deep in the body leaves a plausible module.
     mid = div(byte_size(original), 2)
-    <<head::binary-size(mid), b, tail::binary>> = original
+    <<head::binary-size(^mid), b, tail::binary>> = original
     body_flipped = <<head::binary, Bitwise.bxor(b, 0x01), tail::binary>>
 
     for tampered <- [magic_flipped, body_flipped] do

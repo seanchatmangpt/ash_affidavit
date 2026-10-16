@@ -247,7 +247,12 @@ defmodule AshAffidavit.SigningCourtsTest do
       "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64)
     }
 
-    es256k_sec1 = %{"kid" => "k_k_sec1", "kty" => "EC", "alg" => "ES256K", "sec1" => <<0x03>> <> :binary.copy(<<1>>, 32)}
+    es256k_sec1 = %{
+      "kid" => "k_k_sec1",
+      "kty" => "EC",
+      "alg" => "ES256K",
+      "sec1" => <<0x03>> <> :binary.copy(<<1>>, 32)
+    }
 
     es256k_jwk = %{"kid" => "k_k_jwk", "kty" => "EC", "alg" => "ES256K", "x" => @ec_xy, "y" => @ec_xy}
 
@@ -273,17 +278,34 @@ defmodule AshAffidavit.SigningCourtsTest do
     assert {:error, %Refusal{code: :bad_field, message: m2}} = Keys.from_jwks(%{"keys" => [short_xy]})
     assert m2 =~ "32 bytes each"
 
-    wrong_prefix = %{"kid" => "bad_sec1", "kty" => "EC", "alg" => "ES256", "sec1" => <<0x03>> <> :binary.copy(<<1>>, 64)}
+    wrong_prefix = %{
+      "kid" => "bad_sec1",
+      "kty" => "EC",
+      "alg" => "ES256",
+      "sec1" => <<0x03>> <> :binary.copy(<<1>>, 64)
+    }
 
     assert {:error, %Refusal{code: :bad_field, message: m3}} = Keys.from_jwks(%{"keys" => [wrong_prefix]})
     assert m3 =~ "0x04"
 
-    wrong_prefix_k = %{"kid" => "bad_sec1k", "kty" => "EC", "alg" => "ES256K", "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64)}
+    wrong_prefix_k = %{
+      "kid" => "bad_sec1k",
+      "kty" => "EC",
+      "alg" => "ES256K",
+      "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64)
+    }
 
     assert {:error, %Refusal{code: :bad_field, message: m4}} = Keys.from_jwks(%{"keys" => [wrong_prefix_k]})
     assert m4 =~ "0x02 or 0x03"
 
-    both = %{"kid" => "both", "kty" => "EC", "alg" => "ES256", "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64), "x" => @ec_xy, "y" => @ec_xy}
+    both = %{
+      "kid" => "both",
+      "kty" => "EC",
+      "alg" => "ES256",
+      "sec1" => <<0x04>> <> :binary.copy(<<1>>, 64),
+      "x" => @ec_xy,
+      "y" => @ec_xy
+    }
 
     assert {:error, %Refusal{code: :bad_field, message: m5}} = Keys.from_jwks(%{"keys" => [both]})
     assert m5 =~ "both"
@@ -370,9 +392,7 @@ defmodule AshAffidavit.SigningCourtsTest do
     # Routing follows the envelope's own `algorithm` field (ES256 here): an Ed25519 key under
     # ES256 is the engine's typed malformed_public_key refusal, decided by the routed alg.
     assert {:refused, %Refusal{code: :bad_field, message: routed}} =
-             Signing.verify_signature(@kat_envelope, @ed_sig, @ed_input_hex,
-               public_key_hex: @ed_key
-             )
+             Signing.verify_signature(@kat_envelope, @ed_sig, @ed_input_hex, public_key_hex: @ed_key)
 
     assert routed =~ "ES256"
   end

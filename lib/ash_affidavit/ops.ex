@@ -66,8 +66,10 @@ defmodule AshAffidavit.Ops do
   `"payload"`). Reads `:server`/`:timeout_ms`.
   """
   @spec assemble([map()], keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
   def assemble(events, opts \\ []) when is_list(events) and is_list(opts) do
     call(assemble_request(events), opts)
   end
@@ -89,8 +91,10 @@ defmodule AshAffidavit.Ops do
   Reads `:server`/`:timeout_ms`.
   """
   @spec mine([map()], keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
   def mine(receipts, opts \\ []) when is_list(receipts) and is_list(opts) do
     call(mine_request(receipts), opts)
   end
@@ -112,8 +116,10 @@ defmodule AshAffidavit.Ops do
   `conform` op. Reads `:server`/`:timeout_ms`.
   """
   @spec conform([map()], map(), keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
   def conform(model, trace, opts \\ []) when is_list(model) and is_map(trace) and is_list(opts) do
     call(conform_request(model, trace), opts)
   end
@@ -127,9 +133,23 @@ defmodule AshAffidavit.Ops do
   AuthZEN `request` document, the `decision`, the policy decision point, and the
   caller-attested expectations the engine binds against.
   """
-  @spec certify_authzen_evidence_request(map(), boolean(), String.t() | nil, String.t() | nil, String.t() | nil, String.t() | nil) ::
+  @spec certify_authzen_evidence_request(
+          map(),
+          boolean(),
+          String.t() | nil,
+          String.t() | nil,
+          String.t() | nil,
+          String.t() | nil
+        ) ::
           %{required(String.t()) => term()}
-  def certify_authzen_evidence_request(request, decision, policy_decision_point, expected_policy_decision_point, expected_principal, expected_effect_digest)
+  def certify_authzen_evidence_request(
+        request,
+        decision,
+        policy_decision_point,
+        expected_policy_decision_point,
+        expected_principal,
+        expected_effect_digest
+      )
       when is_map(request) and is_boolean(decision) do
     %{
       "op" => "certify_authzen_evidence",
@@ -149,10 +169,28 @@ defmodule AshAffidavit.Ops do
   are the decision, the policy decision point, and the caller-attested
   expectations. Reads `:server`/`:timeout_ms`.
   """
-  @spec certify_authzen_evidence(map(), boolean(), String.t() | nil, String.t() | nil, String.t() | nil, String.t() | nil, keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
-  def certify_authzen_evidence(request, decision, policy_decision_point, expected_policy_decision_point, expected_principal, expected_effect_digest, opts \\ [])
+  @spec certify_authzen_evidence(
+          map(),
+          boolean(),
+          String.t() | nil,
+          String.t() | nil,
+          String.t() | nil,
+          String.t() | nil,
+          keyword()
+        ) ::
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
+  def certify_authzen_evidence(
+        request,
+        decision,
+        policy_decision_point,
+        expected_policy_decision_point,
+        expected_principal,
+        expected_effect_digest,
+        opts \\ []
+      )
       when is_map(request) and is_boolean(decision) and is_list(opts) do
     call(
       certify_authzen_evidence_request(
@@ -178,7 +216,14 @@ defmodule AshAffidavit.Ops do
   """
   @spec certify_spiffe_evidence_request(String.t(), String.t(), String.t(), String.t(), String.t(), boolean()) ::
           %{required(String.t()) => term()}
-  def certify_spiffe_evidence_request(spiffe_id, expected_spiffe_id, expected_trust_domain, svid_type, bundle_digest, verified)
+  def certify_spiffe_evidence_request(
+        spiffe_id,
+        expected_spiffe_id,
+        expected_trust_domain,
+        svid_type,
+        bundle_digest,
+        verified
+      )
       when is_binary(spiffe_id) and is_binary(expected_spiffe_id) and is_binary(expected_trust_domain) and
              is_binary(svid_type) and is_binary(bundle_digest) and is_boolean(verified) do
     %{
@@ -197,9 +242,19 @@ defmodule AshAffidavit.Ops do
   Reads `:server`/`:timeout_ms`.
   """
   @spec certify_spiffe_evidence(String.t(), String.t(), String.t(), String.t(), String.t(), boolean(), keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
-  def certify_spiffe_evidence(spiffe_id, expected_spiffe_id, expected_trust_domain, svid_type, bundle_digest, verified, opts \\ [])
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
+  def certify_spiffe_evidence(
+        spiffe_id,
+        expected_spiffe_id,
+        expected_trust_domain,
+        svid_type,
+        bundle_digest,
+        verified,
+        opts \\ []
+      )
       when is_binary(spiffe_id) and is_binary(expected_spiffe_id) and is_binary(expected_trust_domain) and
              is_binary(svid_type) and is_binary(bundle_digest) and is_boolean(verified) and is_list(opts) do
     call(
@@ -229,8 +284,10 @@ defmodule AshAffidavit.Ops do
   `jcs_canonicalize` op. Reads `:server`/`:timeout_ms`.
   """
   @spec jcs_canonicalize(String.t(), keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
   def jcs_canonicalize(json, opts \\ []) when is_binary(json) and is_list(opts) do
     call(jcs_canonicalize_request(json), opts)
   end
@@ -246,7 +303,14 @@ defmodule AshAffidavit.Ops do
   """
   @spec smt_absence_verify_request(String.t(), String.t(), String.t(), String.t(), non_neg_integer(), [map()]) ::
           %{required(String.t()) => term()}
-  def smt_absence_verify_request(root_hex, queried_key_hex, neighbor_key_hex, neighbor_value_hex, claimed_prefix_bits, proof_steps)
+  def smt_absence_verify_request(
+        root_hex,
+        queried_key_hex,
+        neighbor_key_hex,
+        neighbor_value_hex,
+        claimed_prefix_bits,
+        proof_steps
+      )
       when is_binary(root_hex) and is_binary(queried_key_hex) and is_binary(neighbor_key_hex) and
              is_binary(neighbor_value_hex) and is_integer(claimed_prefix_bits) and claimed_prefix_bits >= 0 and
              is_list(proof_steps) do
@@ -266,9 +330,19 @@ defmodule AshAffidavit.Ops do
   `smt_absence_verify` op. Reads `:server`/`:timeout_ms`.
   """
   @spec smt_absence_verify(String.t(), String.t(), String.t(), String.t(), non_neg_integer(), [map()], keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
-  def smt_absence_verify(root_hex, queried_key_hex, neighbor_key_hex, neighbor_value_hex, claimed_prefix_bits, proof_steps, opts \\ [])
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
+  def smt_absence_verify(
+        root_hex,
+        queried_key_hex,
+        neighbor_key_hex,
+        neighbor_value_hex,
+        claimed_prefix_bits,
+        proof_steps,
+        opts \\ []
+      )
       when is_binary(root_hex) and is_binary(queried_key_hex) and is_binary(neighbor_key_hex) and
              is_binary(neighbor_value_hex) and is_integer(claimed_prefix_bits) and claimed_prefix_bits >= 0 and
              is_list(proof_steps) and is_list(opts) do
@@ -311,8 +385,10 @@ defmodule AshAffidavit.Ops do
   `range_proof_verify` op. Reads `:server`/`:timeout_ms`.
   """
   @spec range_proof_verify(String.t(), String.t(), pos_integer(), String.t(), keyword()) ::
-          {:ok, map()} | {:refused, AshAffidavit.Refusal.t()}
-          | {:trap, AshAffidavit.Refusal.t()} | {:unsupported, AshAffidavit.Refusal.t()}
+          {:ok, map()}
+          | {:refused, AshAffidavit.Refusal.t()}
+          | {:trap, AshAffidavit.Refusal.t()}
+          | {:unsupported, AshAffidavit.Refusal.t()}
   def range_proof_verify(commitment_hex, proof_hex, bits, label, opts \\ [])
       when is_binary(commitment_hex) and is_binary(proof_hex) and is_integer(bits) and bits > 0 and
              is_binary(label) and is_list(opts) do

@@ -6,7 +6,7 @@ defmodule AshAffidavit.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "26.10.8"
+  @version "26.10.16"
   @name "AshAffidavit"
   @description "Affidavit WASM receipt and process-mining engine for Elixir and Ash: pinned, admitted, typed refusals; grants no authority"
   @github_url "https://github.com/seanchatmangpt/ash_affidavit"

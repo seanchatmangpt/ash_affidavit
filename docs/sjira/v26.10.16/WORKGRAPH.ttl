@@ -1,0 +1,66 @@
+@prefix sj: <https://ggen-igniter.dev/ontology/semantic-jira#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Canonical RDF for the v26.10.16 release campaign on seanchatmangpt/ash_affidavit.
+# Grounded in landed commits on main. Standing belongs to independent exact-subject courts.
+
+sj:WorkOrder a rdfs:Class .
+sj:AcceptanceCriterion a rdfs:Class .
+sj:Falsifier a rdfs:Class .
+sj:DependencyEdge a rdfs:Class .
+
+<#WO-AA-261016-1> a sj:WorkOrder ;
+    sj:identity "AA-261016-1" ;
+    dcterms:title "Public repository transition and .gitignore boundary hardening" ;
+    dcterms:description "Transition repository visibility to public on GitHub and harden .gitignore against lane builds and environment secrets." ;
+    sj:subject "repo-public-and-gitignore" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.16-AA-261016-1" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "git" ;
+    sj:requiredEvidence "gh_repo_view_public" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "gh repo view confirms visibility is PUBLIC and git status is clean" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "repository remains private or unignored local files leak" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope ".gitignore" .
+
+<#WO-AA-261016-2> a sj:WorkOrder ;
+    sj:identity "AA-261016-2" ;
+    dcterms:title "Igniter upgraders: mix ash_affidavit.upgrade task and registry" ;
+    dcterms:description "Implement version-keyed Igniter upgraders (AshAffidavit.Upgrades, Mix.Tasks.AshAffidavit.Upgrade, AshAffidavit.Upgrades.V26_10_16) for automated consumer upgrades." ;
+    sj:subject "igniter-upgraders" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.16-AA-261016-2" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix test test/ash_affidavit_upgrade_test.exs prints 0 failures on the exact subject" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "upgrade tests fail or downgrade is admitted without typed refusal" ] ;
+    sj:projection "jira", "verification" ;
+    sj:pathScope "lib/ash_affidavit/upgrades.ex lib/ash_affidavit/upgrades/ lib/mix/tasks/ash_affidavit.upgrade.ex test/ash_affidavit_upgrade_test.exs" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261016-1" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-261016-3> a sj:WorkOrder ;
+    sj:identity "AA-261016-3" ;
+    dcterms:title "Release v26.10.16: version bump across carriers" ;
+    dcterms:description "Bump version 26.10.8 -> 26.10.16 across all version carriers (mix.exs, CHANGELOG.md, README.md, diataxis guides and tutorials)." ;
+    sj:subject "v261016-version-bump" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.10.16-AA-261016-3" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "compile", "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix.exs @version reads 26.10.16 and all version carriers agree" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "a version carrier still names 26.10.8" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "mix.exs CHANGELOG.md README.md docs documentation" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261016-2" ; sj:dependencyType "requiresReceipt" ] .

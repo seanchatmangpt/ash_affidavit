@@ -5,7 +5,7 @@ The guides under `docs/diataxis/` follow the
 `AshAffidavit` hex docs (see `mix.exs`, `docs/0` `extras`): tutorials and
 how-to pages under GUIDES, the reference under the module lists.
 
-Every entry verified against `lib/` in ash_affidavit 26.10.8.
+Every entry verified against `lib/` in ash_affidavit 26.10.16.
 
 ## Tutorials
 

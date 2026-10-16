@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT
 mix igniter.install ash_affidavit
 ```
 
-Without Igniter, add `{:ash_affidavit, "~> 26.10.8"}` and `{:wasmex, "~> 0.15.1"}` to `deps` and
+Without Igniter, add `{:ash_affidavit, "~> 26.10.16"}` and `{:wasmex, "~> 0.15.1"}` to `deps` and
 `import_deps: [:ash_affidavit]` to `.formatter.exs`. Then:
 
 ```sh

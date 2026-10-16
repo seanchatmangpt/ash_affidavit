@@ -39,6 +39,7 @@ defmodule AshAffidavit.AiroW690PinTest do
   test "every VIA-cited lib path resolves to a loadable module" do
     for {path, module} <- @via_modules do
       assert File.exists?(Path.join(@repo_root, path)), "cited path missing: #{path}"
+
       assert Code.ensure_loaded(module) == {:module, module},
              "cited path #{path} does not load as #{inspect(module)}"
     end

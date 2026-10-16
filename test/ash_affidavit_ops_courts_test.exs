@@ -91,8 +91,9 @@ defmodule AshAffidavit.OpsCourtsTest do
     end
 
     test "example_request/1 resolves every wrapped op" do
-      for op <- ~w(assemble mine conform certify_authzen_evidence certify_spiffe_evidence jcs_canonicalize smt_absence_verify range_proof_verify) do
-        assert %{"op" => op} = Ops.example_request(op)
+      for op <-
+            ~w(assemble mine conform certify_authzen_evidence certify_spiffe_evidence jcs_canonicalize smt_absence_verify range_proof_verify) do
+        assert %{"op" => ^op} = Ops.example_request(op)
       end
 
       assert Ops.example_request("no_such_op") == nil
@@ -101,7 +102,8 @@ defmodule AshAffidavit.OpsCourtsTest do
     test "all wrapped ops are in the engine's capability registry" do
       ops = AshAffidavit.ops()
 
-      for op <- ~w(assemble mine conform certify_authzen_evidence certify_spiffe_evidence jcs_canonicalize smt_absence_verify range_proof_verify) do
+      for op <-
+            ~w(assemble mine conform certify_authzen_evidence certify_spiffe_evidence jcs_canonicalize smt_absence_verify range_proof_verify) do
         assert op in ops
       end
     end

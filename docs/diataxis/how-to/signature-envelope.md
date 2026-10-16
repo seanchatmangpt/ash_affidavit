@@ -6,7 +6,7 @@ through the engine's signing ops — using `AshAffidavit.Signing`,
 
 ## Prerequisites
 
-- `ash_affidavit` 26.10.8 with the pool running
+- `ash_affidavit` 26.10.16 with the pool running
   (`config :ash_affidavit, start_pool: true`).
 - The pinned engine exposes the signing ops: `verify_signature_input`,
   `verify_signature` and `derive_subject_digest`. The pinned artifact is
