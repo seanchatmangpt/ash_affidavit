@@ -1,0 +1,102 @@
+@prefix sj: <https://ggen-igniter.dev/ontology/semantic-jira#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Canonical RDF Semantic Jira Graph for the v26.11.10 release campaign on seanchatmangpt/ash_affidavit.
+# Grounded in landed commits on main. Standing belongs to independent exact-subject courts.
+
+sj:WorkOrder a rdfs:Class .
+sj:AcceptanceCriterion a rdfs:Class .
+sj:Falsifier a rdfs:Class .
+sj:DependencyEdge a rdfs:Class .
+
+<#WO-AA-261110-01> a sj:WorkOrder ;
+    sj:identity "AA-261110-01" ;
+    dcterms:title "Ed25519 settlement chain verifier hardening and RFC 8032 courts" ;
+    dcterms:description "Add Single Authority Law header and HANDWRITTEN.md ledgering to AshAffidavit.ChainVerifier, support Base64/Base64url/raw decoding, and verify RFC 8032 test vectors and invalidation cases." ;
+    sj:subject "chain-verifier-hardening" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.11.10-AA-261110-01" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix test test/ash_affidavit_extension_render_test.exs test/ash_affidavit_chain_verifier_test.exs passes with 0 failures" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "chain verifier lacks unsupported header, missing from HANDWRITTEN.md, or fails RFC 8032 vectors" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "lib/ash_affidavit/chain_verifier.ex HANDWRITTEN.md test/ash_affidavit_chain_verifier_test.exs" .
+
+<#WO-AA-261110-02> a sj:WorkOrder ;
+    sj:identity "AA-261110-02" ;
+    dcterms:title "Parallel test suite process registry isolation" ;
+    dcterms:description "Replace unlinked AshAffidavit.Pool.start_link([]) with start_supervised!/1 in test/ash_affidavit_signing_courts_test.exs to eliminate parallel process registry collisions." ;
+    sj:subject "process-registry-isolation" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.11.10-AA-261110-02" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "tests" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix test executes the full test suite in parallel with 0 process registry collisions" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "tests fail with {:already_started, pid} under parallel ExUnit execution" ] ;
+    sj:projection "jira", "verification" ;
+    sj:pathScope "test/ash_affidavit_signing_courts_test.exs" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261110-01" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-261110-03> a sj:WorkOrder ;
+    sj:identity "AA-261110-03" ;
+    dcterms:title "Version bump synchronization across carriers and Credo strict compliance" ;
+    dcterms:description "Bump version 26.10.16 -> 26.11.10 across all version carriers (mix.exs, README.md, CHANGELOG.md, usage-rules, diataxis) and fix 5 Credo strict refactoring warnings." ;
+    sj:subject "version-bump-and-credo" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.11.10-AA-261110-03" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "credo", "format" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix credo --strict and mix format --check-formatted pass with 0 warnings, and all carriers declare 26.11.10" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "credo reports refactoring issues or a carrier still declares 26.10.16" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "mix.exs CHANGELOG.md README.md usage-rules/ docs/ lib/ash_affidavit/signing.ex lib/ash_affidavit/signing/keys.ex" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261110-02" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-261110-04> a sj:WorkOrder ;
+    sj:identity "AA-261110-04" ;
+    dcterms:title "Hex publish readiness, taxonomy enforcement, and packaging closure verification" ;
+    dcterms:description "Fix ExDoc readme redirection warning, migrate docs/diataxis/reference/generated/ to descriptors/, assert package closure via hex.build --unpack, and execute hex.publish dry run." ;
+    sj:subject "hex-publish-readiness" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.11.10-AA-261110-04" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "docs", "hex" ;
+    sj:requiredEvidence "command_exit_codes", "real_output" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "mix docs --warnings-as-errors passes, hex package unpack verifies closure with 0 forbidden leaks, and dry-run exits 0" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "ex_doc emits warnings, generated directory persists, or package ships forbidden build artifacts" ] ;
+    sj:projection "jira", "receipt" ;
+    sj:pathScope "mix.exs .gitignore docs/diataxis/reference/descriptors/ docs/jira/v26.11.10/HEX-RELEASE-COURT-RECEIPT.md" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261110-03" ; sj:dependencyType "requiresReceipt" ] .
+
+<#WO-AA-261110-05> a sj:WorkOrder ;
+    sj:identity "AA-261110-05" ;
+    dcterms:title "Multi-persona architectural swarm review and synthesis" ;
+    dcterms:description "Author 10 luminary architectural evaluation briefs across Ash, OTP, VM, security, and DfCM doctrine, synthesizing an aggregate quality score exceeding 95.0%." ;
+    sj:subject "swarm-architectural-review" ;
+    sj:repository "seanchatmangpt/ash_affidavit" ;
+    sj:evidenceCeiling "EXECUTED_VERIFIED" ;
+    sj:promotionRule "verified_by_required_courts_then_receipted" ;
+    sj:replayIdentity "sjira-v26.11.10-AA-261110-05" ;
+    sj:authorityRequirement "NONE" ;
+    sj:requiredCourt "review" ;
+    sj:requiredEvidence "evaluation_briefs", "synthesis_score" ;
+    sj:acceptanceItem [ a sj:AcceptanceCriterion ; sj:index 0 ; dcterms:description "10 luminary evaluations present in docs/jira/v26.11.10/evaluations/ with aggregate score >= 95.0%" ] ;
+    sj:falsifierItem [ a sj:Falsifier ; sj:index 0 ; dcterms:description "evaluation briefs missing, ungrounded claims, or aggregate score below 95.0%" ] ;
+    sj:projection "jira", "review" ;
+    sj:pathScope "docs/jira/v26.11.10/evaluations/ docs/jira/v26.11.10/SWARM-REVIEW-SYNTHESIS.md" ;
+    sj:dependency [ a sj:DependencyEdge ; sj:upstream "AA-261110-04" ; sj:dependencyType "requiresReceipt" ] .

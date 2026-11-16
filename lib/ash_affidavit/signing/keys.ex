@@ -204,20 +204,18 @@ defmodule AshAffidavit.Signing.Keys do
   end
 
   defp b64url(value, key, member) do
-    cond do
-      String.contains?(value, ["=", "+", "/"]) ->
-        {:error,
-         Refusal.new(
-           :invalid_encoding,
-           "#{member} must be unpadded base64url",
-           Map.put(key_details(key), member, value)
-         )}
-
-      true ->
-        case Base.url_decode64(value, padding: false) do
-          {:ok, raw} -> {:ok, raw}
-          :error -> {:error, Refusal.new(:invalid_encoding, "#{member} is not valid base64url", key_details(key))}
-        end
+    if String.contains?(value, ["=", "+", "/"]) do
+      {:error,
+       Refusal.new(
+         :invalid_encoding,
+         "#{member} must be unpadded base64url",
+         Map.put(key_details(key), member, value)
+       )}
+    else
+      case Base.url_decode64(value, padding: false) do
+        {:ok, raw} -> {:ok, raw}
+        :error -> {:error, Refusal.new(:invalid_encoding, "#{member} is not valid base64url", key_details(key))}
+      end
     end
   end
 

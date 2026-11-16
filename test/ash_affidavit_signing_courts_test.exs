@@ -16,10 +16,7 @@ defmodule AshAffidavit.SigningCourtsTest do
   doctest Signing
 
   setup_all do
-    {:ok, _} = Application.ensure_all_started(:ash_affidavit)
-    {:ok, _} = AshAffidavit.Pool.start_link([])
-    {:ok, _} = AshAffidavit.Host.start_link(name: nil, bytes: File.read!("priv/affidavit/affidavit.wasm"))
-    on_exit(fn -> Application.delete_env(:ash_affidavit, :start_pool) end)
+    start_supervised!({AshAffidavit.Pool, size: 2})
     :ok
   end
 

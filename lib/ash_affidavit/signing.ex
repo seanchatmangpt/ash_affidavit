@@ -326,26 +326,32 @@ defmodule AshAffidavit.Signing do
   @spec derive_subject_digest(binary(), binary(), keyword()) ::
           {:ok, map()} | {:refused, Refusal.t()} | {:trap, Refusal.t()} | {:unsupported, Refusal.t()}
   def derive_subject_digest(domain_tag, subject, opts \\ []) when is_binary(domain_tag) and is_binary(subject) do
-    cond do
-      domain_tag == "" ->
-        {:refused, Refusal.new(:bad_field, "domain_tag must not be empty")}
+    if domain_tag == "" do
+      {:refused, Refusal.new(:bad_field, "domain_tag must not be empty")}
+    else
+      request = %{
+        "op" => "derive_subject_digest",
+        "domain_tag" => domain_tag,
+        "subject_hex" => Base.encode16(subject, case: :lower)
+      }
 
-      true ->
-        request = %{
-          "op" => "derive_subject_digest",
-          "domain_tag" => domain_tag,
-          "subject_hex" => Base.encode16(subject, case: :lower)
-        }
+      call_and_decode_subject_digest(request, opts)
+    end
+  end
 
-        case AshAffidavit.call(request, Keyword.take(opts, [:server, :timeout_ms])) do
-          {:ok, %{"digest_hex" => digest_hex, "pre_image_hex" => pre_image_hex}} ->
-            with {:ok, digest} <- Base.decode16(digest_hex, case: :lower) do
-              {:ok, %{digest_hex: digest_hex, pre_image_hex: pre_image_hex, digest: digest}}
-            end
+  defp call_and_decode_subject_digest(request, opts) do
+    case AshAffidavit.call(request, Keyword.take(opts, [:server, :timeout_ms])) do
+      {:ok, %{"digest_hex" => digest_hex, "pre_image_hex" => pre_image_hex}} ->
+        decode_subject_digest_payload(digest_hex, pre_image_hex)
 
-          other ->
-            other
-        end
+      other ->
+        other
+    end
+  end
+
+  defp decode_subject_digest_payload(digest_hex, pre_image_hex) do
+    with {:ok, digest} <- Base.decode16(digest_hex, case: :lower) do
+      {:ok, %{digest_hex: digest_hex, pre_image_hex: pre_image_hex, digest: digest}}
     end
   end
 
@@ -398,46 +404,51 @@ defmodule AshAffidavit.Signing do
     end
   end
 
-  defp algorithm_of(key_source, opts) do
-    cond do
-      envelope?(key_source) and is_binary(key_source["algorithm"]) and key_source["algorithm"] != "" ->
-        {:ok, key_source["algorithm"]}
+  defp algorithm_of(%{"version" => @envelope_version} = env, _opts) do
+    case env["algorithm"] do
+      alg when is_binary(alg) and alg != "" ->
+        {:ok, alg}
 
-      envelope?(key_source) ->
+      _ ->
         {:refused, Refusal.new(:missing_field, "envelope carries no usable `algorithm` field")}
+    end
+  end
 
-      true ->
-        alg =
-          key_source[:alg] || key_source["alg"] || key_source[:algorithm] || key_source["algorithm"] ||
-            opts[:alg]
+  defp algorithm_of(key_source, opts) do
+    case extract_alg(key_source, opts) do
+      alg when is_binary(alg) and alg != "" ->
+        {:ok, alg}
 
-        if is_binary(alg) and alg != "" do
-          {:ok, alg}
-        else
-          {:refused, Refusal.new(:missing_field, "key material carries no `alg`")}
+      _ ->
+        {:refused, Refusal.new(:missing_field, "key material carries no `alg`")}
+    end
+  end
+
+  defp extract_alg(key_source, opts) do
+    key_source[:alg] || key_source["alg"] || key_source[:algorithm] || key_source["algorithm"] || opts[:alg]
+  end
+
+  defp key_hex_of(key_source, opts) do
+    case extract_key_hex(key_source, opts) do
+      {:ok, hex} ->
+        {:ok, hex}
+
+      :none ->
+        case extract_raw_key(key_source, opts) do
+          {:ok, raw} -> {:ok, Base.encode16(raw, case: :lower)}
+          :none -> {:refused, Refusal.new(:missing_field, "key material carries no public key")}
         end
     end
   end
 
-  defp envelope?(%{"version" => @envelope_version}), do: true
-  defp envelope?(_), do: false
+  defp extract_key_hex(key_source, opts) do
+    hex = key_source[:public_key_hex] || key_source["public_key_hex"] || opts[:public_key_hex]
+    if is_binary(hex) and hex != "", do: {:ok, hex}, else: :none
+  end
 
-  defp key_hex_of(key_source, opts) do
-    hex =
-      key_source[:public_key_hex] || key_source["public_key_hex"] || opts[:public_key_hex]
-
+  defp extract_raw_key(key_source, opts) do
     raw = key_source[:public_key] || key_source["public_key"] || opts[:public_key]
-
-    cond do
-      is_binary(hex) and hex != "" ->
-        {:ok, hex}
-
-      is_binary(raw) and raw != "" ->
-        {:ok, Base.encode16(raw, case: :lower)}
-
-      true ->
-        {:refused, Refusal.new(:missing_field, "key material carries no public key")}
-    end
+    if is_binary(raw) and raw != "", do: {:ok, raw}, else: :none
   end
 
   # A raw-bytes-or-hex argument: an even-length decodable hex string passes through; anything

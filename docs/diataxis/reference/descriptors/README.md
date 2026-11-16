@@ -1,18 +1,18 @@
-# Generated API reference (doc-hdit)
+# API Surface Descriptors (doc-hdit)
 
-GENERATED — do not edit by hand. The tables in `reference.md` are rendered
+Projected API reference descriptors. The tables in `reference.md` are rendered
 from the Elixir code surface; the only agent-writable region in any file
 here is the fenced `AGENT-COMMENTARY` slot.
 
 ## Regenerate
 
 ```sh
-python3 /Users/sac/ggen-marketplace/scripts/gen_doc_surface.py code /Users/sac/ash_affidavit \
+python3 "${MARKETPLACE_ROOT:-../ggen-marketplace}/scripts/gen_doc_surface.py" code . \
   > /tmp/hdit/ash_affidavit.code.v3.json
-/Users/sac/ggen-marketplace/packs/rust-doc-hdit-pack/target/release/doc-hdit scaffold \
+doc-hdit scaffold \
   --code /tmp/hdit/ash_affidavit.code.v3.json \
-  --templates /Users/sac/ggen-marketplace/packs/rust-doc-hdit-pack/templates \
-  --out docs/diataxis/reference/generated
+  --templates "${MARKETPLACE_ROOT:-../ggen-marketplace}/packs/rust-doc-hdit-pack/templates" \
+  --out docs/diataxis/reference/descriptors
 ```
 
 ## Audit

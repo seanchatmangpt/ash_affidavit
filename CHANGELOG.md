@@ -10,6 +10,16 @@ All notable changes to this project are recorded here. The version is CalVer (`Y
 
 <!-- changelog -->
 
+## [v26.11.10](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.11.10) (2026-11-10)
+
+- Version bumped to `26.11.10` across all version carriers (`mix.exs`, `README.md`, `usage-rules.md`, and Diataxis guides).
+- `AshAffidavit.ChainVerifier`: added detached Ed25519 commercial settlement cryptographic signature and pre-image chain verifier (`verify_settlement/1`) supporting Base64, unpadded Base64url, and raw 32/64-byte binary keys and signatures with fail-closed security.
+- Comprehensive ExUnit test suite in `test/ash_affidavit_chain_verifier_test.exs` covering RFC 8032 known-answer vectors and extensive tamper-resistance/corruption edge cases.
+- Process pool isolation hardening in `test/ash_affidavit_signing_courts_test.exs`: eliminated unsupervised global process leak that caused parallel ExUnit collisions under high concurrency.
+- Credo strict compliance: resolved all 5 refactoring findings in `AshAffidavit.Signing` and `AshAffidavit.Signing.Keys` (nesting depth, cyclomatic complexity, and single-case conditionals).
+- ExDoc and documentation packaging: eliminated `readme.html` redirection warning, registered `AshAffidavit.ChainVerifier` in module groups, and enforced directory taxonomy law by migrating generated reference skeletons to `docs/diataxis/reference/descriptors/`.
+- Hex release qualification: verified clean package closure (whitelisted files, zero leaked build/dev artifacts), passed dry-run publication, and authored full Semantic Jira milestone suite (`docs/jira/v26.11.10/` and `docs/sjira/v26.11.10/WORKGRAPH.ttl`).
+
 ## [v26.10.16](https://github.com/seanchatmangpt/ash_affidavit/releases/tag/v26.10.16) (2026-10-16)
 
 - Version bumped to 26.10.16 across all version carriers (mix.exs, README.md, diataxis guides and tutorials).

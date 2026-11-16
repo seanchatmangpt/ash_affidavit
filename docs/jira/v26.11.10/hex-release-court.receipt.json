@@ -1,0 +1,150 @@
+{
+  "work_order_id": "AA-261110-HEX-RELEASE-COURT",
+  "origin_authority": {
+    "ceiling": "CONSTRUCT",
+    "grant": "milestone-1-dispatch",
+    "actor": "orchestrator"
+  },
+  "provider": {
+    "name": "teamwork-worker-m1",
+    "transport": "gemini-cli",
+    "authority_ceiling": "CONSTRUCT",
+    "receipt_protocol": "chatman-receipt-v2"
+  },
+  "provider_execution_id": "8b0ad09b-475b-4ba7-8458-7c675e289b24:m1",
+  "identity": {
+    "subject": "ash_affidavit-26.11.10.tar",
+    "repo": "/Users/sac/ash_affidavit",
+    "subject_sha": "ffc8dfd4a98946079ced44c530dc4a8e38ad491f",
+    "base_sha": "ffc8dfd4a98946079ced44c530dc4a8e38ad491f",
+    "subject_digest": {
+      "algorithm": "sha256",
+      "value": "ae0acc06e4a184e318e32c18a4f3de0f7e6bd28e40e492daabf8ea63b947f6ee"
+    }
+  },
+  "authority": {
+    "ceiling": "CONSTRUCT",
+    "grant": "milestone-1-dispatch",
+    "actor": "teamwork-worker-m1"
+  },
+  "consequence": {
+    "commits": [],
+    "files_changed": [
+      "lib/ash_affidavit/chain_verifier.ex",
+      "HANDWRITTEN.md",
+      "test/ash_affidavit_chain_verifier_test.exs",
+      "test/ash_affidavit_signing_courts_test.exs",
+      "lib/ash_affidavit/signing.ex",
+      "lib/ash_affidavit/signing/keys.ex",
+      "mix.exs",
+      "CHANGELOG.md",
+      "README.md",
+      "usage-rules/setup.md",
+      "documentation/tutorials/getting-started.md",
+      "docs/diataxis/README.md",
+      "docs/diataxis/how-to/signature-envelope.md",
+      "docs/diataxis/how-to/use-the-ash-extension.md",
+      "docs/diataxis/tutorials/run-your-first-receipt.md",
+      "docs/diataxis/reference/public-api.md",
+      "docs/diataxis/reference/descriptors/README.md",
+      "docs/diataxis/reference/descriptors/explanation.md",
+      "docs/diataxis/reference/descriptors/how_to.md",
+      "docs/diataxis/reference/descriptors/reference.md",
+      ".gitignore",
+      "docs/jira/v26.11.10/000-SURVEY-RECEIPT.md",
+      "docs/jira/v26.11.10/00-INDEX.md",
+      "docs/jira/v26.11.10/EPIC-RELEASE-v26.11.10.md",
+      "docs/jira/v26.11.10/ARD-v26.11.10.md",
+      "docs/jira/v26.11.10/PRD-v26.11.10.md",
+      "docs/jira/v26.11.10/AA-261110-01-chain-verifier-court.md",
+      "docs/jira/v26.11.10/AA-261110-02-test-suite-isolation.md",
+      "docs/jira/v26.11.10/AA-261110-03-version-bump-synchronization.md",
+      "docs/jira/v26.11.10/AA-261110-04-hex-publish-readiness.md",
+      "docs/jira/v26.11.10/AA-261110-05-multi-persona-review.md",
+      "docs/jira/v26.11.10/HEX-RELEASE-COURT-RECEIPT.md",
+      "docs/jira/v26.11.10/hex-release-court.receipt.json",
+      "docs/jira/v26.11.10/SWARM-REVIEW-SYNTHESIS.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-01-ZACH-DANIEL.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-02-JOE-ARMSTRONG.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-03-JOSE-VALIM.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-04-CHRIS-MCCORD.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-05-PRAGMATIC-PROGRAMMERS.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-06-ROBERT-VIRDING.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-07-MIKE-WILLIAMS.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-08-FRANCESCO-CESARINI.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-09-FRED-HEBERT.md",
+      "docs/jira/v26.11.10/evaluations/EVAL-10-RICH-HICKEY-SEAN-CHATMAN.md",
+      "docs/sjira/v26.11.10/WORKGRAPH.ttl"
+    ],
+    "remote_effects": []
+  },
+  "replay": {
+    "commands": [
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix format --check-formatted",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Verified zero formatting drift across repository"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix compile --warnings-as-errors",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Compiled 31 source files cleanly with zero compiler warnings"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix credo --strict",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "50 source files, 435 mods/funs checked, zero issues found"
+      },
+      {
+        "cmd": "MIX_ENV=test MIX_BUILD_ROOT=_build-lane-m1 mix sobelow --skip",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Sobelow security static analysis passed with zero high-confidence findings"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix ash_affidavit.verify",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Affidavit Wasm engine verified (sha256 5cc37aea8e59f7139e2ff5d43ab3c3c82931285b6400cf45f943c61d21a41402, abi_version 1)"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix test",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "169 passed (11 doctests, 158 tests, 0 failures), 5 excluded"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix docs --warnings-as-errors",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "ExDoc HTML, Markdown, and EPUB docs generated with zero warnings"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix hex.build --unpack -o _build-lane-m1/pkg_unpack",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Package unpacked and closure verified (MANIFEST.json, Wasm, REUSE, usage-rules, docs present; no build/test leaks)"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix hex.build -o _build-lane-m1/ash_affidavit-26.11.10.tar",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Built ash_affidavit-26.11.10.tar (317,952 bytes; outer sha256 ae0acc06e4a184e318e32c18a4f3de0f7e6bd28e40e492daabf8ea63b947f6ee; inner CHECKSUM 3F8F5A5098AB2F81AD8093E1D53F0A77F8A207D13ABD1F285785FEF6C3B54595)"
+      },
+      {
+        "cmd": "MIX_BUILD_ROOT=_build-lane-m1 mix hex.publish --dry-run --yes < /dev/null",
+        "cwd": "/Users/sac/ash_affidavit",
+        "exit": 0,
+        "summary": "Dry-run package and docs publication passed Hex checks with zero live remote publication"
+      }
+    ],
+    "durable_location": "docs/jira/v26.11.10/hex-release-court.receipt.json"
+  },
+  "standing": {
+    "value": "PARTIAL_ALIVE",
+    "derived_from": "mix hex.build (exit 0, sha256 ae0acc06e4a184e318e32c18a4f3de0f7e6bd28e40e492daabf8ea63b947f6ee), test ladder rungs 1-6 (all exit 0), and mix hex.publish --dry-run --yes (exit 0) atop ffc8dfd4a98946079ced44c530dc4a8e38ad491f; ALIVE release standing gated on maintainer Hex API key publication and remote CI receipt per AGENTS.md"
+  }
+}

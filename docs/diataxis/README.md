@@ -5,7 +5,7 @@ The guides under `docs/diataxis/` follow the
 `AshAffidavit` hex docs (see `mix.exs`, `docs/0` `extras`): tutorials and
 how-to pages under GUIDES, the reference under the module lists.
 
-Every entry verified against `lib/` in ash_affidavit 26.10.16.
+Every entry verified against `lib/` in ash_affidavit 26.11.10.
 
 ## Tutorials
 
@@ -26,7 +26,7 @@ Every entry verified against `lib/` in ash_affidavit 26.10.16.
 
 - [Public API](reference/public-api.md) — every public function, the engine
   ops, host/pool, refusals, configuration and mix tasks.
-- [Generated API reference](reference/generated/README.md) — doc-hdit
+- [API Surface Descriptors](reference/descriptors/README.md) — doc-hdit
   scaffolded skeletons rendered from the code surface (do not edit by hand).
 
 ## Explanation

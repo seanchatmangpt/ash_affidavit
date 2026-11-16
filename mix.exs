@@ -6,7 +6,7 @@ defmodule AshAffidavit.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "26.10.16"
+  @version "26.11.10"
   @name "AshAffidavit"
   @description "Affidavit WASM receipt and process-mining engine for Elixir and Ash: pinned, admitted, typed refusals; grants no authority"
   @github_url "https://github.com/seanchatmangpt/ash_affidavit"
@@ -92,7 +92,7 @@ defmodule AshAffidavit.MixProject do
         ]
       ],
       groups_for_modules: [
-        API: [AshAffidavit, AshAffidavit.Refusal],
+        API: [AshAffidavit, AshAffidavit.Refusal, AshAffidavit.ChainVerifier],
         "Ash extension": [
           AshAffidavit.Resource,
           AshAffidavit.Resource.Info,
@@ -125,15 +125,20 @@ defmodule AshAffidavit.MixProject do
   # Extras in reading order. Single files are filtered through File.exists?/1 and directories use
   # Path.wildcard/1 so a new page under documentation/ is picked up without editing this file.
   defp extras do
-    existing([{"README.md", title: "Home"}, "usage-rules.md"]) ++
+    existing([{"README.md", title: "Home", filename: "readme"}, "usage-rules.md"]) ++
       Path.wildcard("usage-rules/*.md") ++
       Path.wildcard("documentation/tutorials/*.md") ++
       Path.wildcard("documentation/topics/*.md") ++
       Path.wildcard("documentation/dsls/*.md") ++
-      [{"docs/diataxis/README.md", title: "Documentation Map"}] ++
+      [{"docs/diataxis/README.md", title: "Documentation Map", filename: "diataxis_map"}] ++
       Path.wildcard("docs/diataxis/tutorials/*.md") ++
       Path.wildcard("docs/diataxis/how-to/*.md") ++
       Path.wildcard("docs/diataxis/reference/*.md") ++
+      [
+        {"docs/diataxis/reference/descriptors/README.md", title: "API Descriptors Map", filename: "descriptors_map"}
+      ] ++
+      (Path.wildcard("docs/diataxis/reference/descriptors/*.md") --
+         ["docs/diataxis/reference/descriptors/README.md"]) ++
       Path.wildcard("docs/diataxis/explanation/*.md") ++
       existing(["AGENTS.md", "HANDWRITTEN.md", "CHANGELOG.md", "LICENSE"])
   end
