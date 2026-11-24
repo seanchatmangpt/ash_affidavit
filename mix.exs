@@ -57,9 +57,9 @@ defmodule AshAffidavit.MixProject do
   def cli do
     [
       preferred_envs: [
-        credo: :test,
-        dialyzer: :test,
-        sobelow: :test,
+        credo: :dev,
+        dialyzer: :dev,
+        sobelow: :dev,
         "spark.formatter": :test,
         "spark.cheat_sheets": :test
       ]
@@ -178,12 +178,12 @@ defmodule AshAffidavit.MixProject do
       {:igniter, ">= 0.6.29 and < 1.0.0-0", optional: true},
       # Optional: AshAffidavit.Reactor.Step exists only when Reactor is loadable (Ash itself depends on it).
       {:reactor, "~> 1.0", optional: true},
-      {:ex_doc, "~> 0.38", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.38", only: :dev, runtime: false},
       {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
-      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
+      {:sobelow, "~> 0.13", only: :dev, runtime: false},
+      {:mix_audit, "~> 2.1", only: :dev, runtime: false},
       {:git_ops, "~> 2.6", only: [:dev, :test], runtime: false},
       {:usage_rules, "~> 1.2", only: :dev}
     ]
